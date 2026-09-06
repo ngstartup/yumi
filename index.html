@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#2F62F0" />
+    <title>Yumi — Learn English. Build your future.</title>
+    <meta name="description" content="Yumi est une application moderne d'apprentissage de l'anglais pour adultes : parcours A1 à C2, leçons interactives, feedback pédagogique, XP, séries et certificats." />
+    <link rel="canonical" href="https://yumi.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Yumi" />
+    <meta property="og:title" content="Yumi — Learn English. Build your future." />
+    <meta property="og:description" content="Apprenez l'anglais progressivement : parcours CECRL A1→C2, exercices interactifs, feedback pédagogique et progression mesurable." />
+    <meta property="og:image" content="/og-image.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <!-- Chemins relatifs : la même build sert le site, la PWA, la démo
+         mono-fichier et l'application empaquetée (Capacitor). -->
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="format-detection" content="telephone=no" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        "name": "Yumi",
+        "description": "Plateforme d'apprentissage de l'anglais pour adultes, alignée sur le CECRL.",
+        "url": "https://yumi.app/"
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>Yumi nécessite JavaScript pour fonctionner.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

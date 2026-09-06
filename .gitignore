@@ -1,0 +1,24 @@
+node_modules/
+dist/
+dist-single/
+artifact/
+screenshots/
+*.local
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# Sorties de publication : APK, paquets de mise à jour et — surtout — la clé
+# de signature. Rien de tout cela ne doit se retrouver dans le dépôt.
+release/
+
+# Le contenu web copié par `cap sync` : régénéré à chaque build.
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+android/capacitor-cordova-android-plugins/
+android/app/capacitor.build.gradle
+android/capacitor.settings.gradle
+android/.gradle/
+android/local.properties

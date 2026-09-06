@@ -1,0 +1,177 @@
+# =============================================================================
+# Yumi — publication automatique
+# =============================================================================
+# Se déclenche à chaque modification du code poussée sur `main`.
+#
+# Ce que fait ce pipeline, dans l'ordre :
+#   1. il vérifie que le code compile et que les 50 tests passent ;
+#   2. il attribue un numéro de version, sans intervention manuelle ;
+#   3. il fabrique le paquet de mise à jour et l'APK signé ;
+#   4. il publie les deux dans une Release GitHub.
+#
+# Résultat côté téléphone : au démarrage suivant, l'application trouve le
+# manifeste, télécharge le paquet et l'active. Aucune réinstallation.
+#
+# Les tests sont la barrière de sécurité : ce pipeline pousse du code
+# directement sur un téléphone, un test rouge doit donc arrêter la publication.
+# =============================================================================
+
+name: Publier Yumi
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - '.gitignore'
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: "Résumé affiché dans l'application"
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  # Une seule publication à la fois : deux Releases concurrentes se
+  # disputeraient le tag « latest » que le téléphone interroge.
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publier:
+    runs-on: ubuntu-latest
+    env:
+      # Playwright n'est utilisé que par le test de bout en bout local ; inutile
+      # de télécharger 400 Mo de navigateurs sur le runner.
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      # -----------------------------------------------------------------------
+      # Numéro de version — automatique, jamais à saisir à la main.
+      #
+      # `major.minor` vient de package.json (à vous de l'incrémenter pour une
+      # évolution importante) ; le numéro de correctif est le numéro de build
+      # GitHub, donc strictement croissant. Sans cela, une version inchangée
+      # signifierait « rien de neuf » et le téléphone ignorerait la mise à jour.
+      # -----------------------------------------------------------------------
+      - name: Calculer la version
+        id: version
+        run: |
+          BASE=$(node -p "require('./package.json').version.split('.').slice(0,2).join('.')")
+          VERSION="$BASE.${{ github.run_number }}"
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version publiée : $VERSION"
+
+      - name: Vérifier le code
+        run: |
+          npm run typecheck
+          npm test
+
+      # -----------------------------------------------------------------------
+      # Build web. L'URL du manifeste est déduite du dépôt : rien n'est écrit en
+      # dur dans le code, et le pipeline fonctionne tel quel après un fork ou un
+      # renommage du dépôt.
+      # -----------------------------------------------------------------------
+      - name: Construire l'application web
+        env:
+          VITE_UPDATE_MANIFEST_URL: https://github.com/${{ github.repository }}/releases/latest/download/latest.json
+        run: npm run build
+
+      - name: Fabriquer le paquet de mise à jour
+        env:
+          YUMI_BUNDLE_URL: https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/yumi-${{ steps.version.outputs.version }}.zip
+          YUMI_NOTES: ${{ github.event.inputs.notes || github.event.head_commit.message }}
+        run: node scripts/make-bundle.mjs
+
+      - name: Synchroniser le projet Android
+        run: npx cap sync android
+
+      # -----------------------------------------------------------------------
+      # Signature. La clé vit dans les secrets du dépôt, jamais dans le code.
+      # C'est elle qui permet d'installer une nouvelle version par-dessus
+      # l'ancienne : deux APK signés par des clés différentes sont, pour
+      # Android, deux applications sans rapport.
+      # -----------------------------------------------------------------------
+      - name: Restaurer la clé de signature
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::Le secret ANDROID_KEYSTORE_BASE64 est absent. Voir ANDROID.md, étape 3."
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/yumi-release.jks"
+
+      - name: Compiler l'APK signé
+        env:
+          YUMI_KEYSTORE_PATH: ${{ runner.temp }}/yumi-release.jks
+          YUMI_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          YUMI_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          YUMI_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || 'yumi' }}
+          YUMI_VERSION_CODE: ${{ github.run_number }}
+        working-directory: android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Renommer l'APK
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk \
+             release/Yumi-${{ steps.version.outputs.version }}.apk
+
+      - name: Effacer la clé du runner
+        if: always()
+        run: rm -f "$RUNNER_TEMP/yumi-release.jks"
+
+      - name: Publier la Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Yumi ${{ steps.version.outputs.version }}
+          body: |
+            **Mise à jour automatique.** Les téléphones où Yumi est déjà
+            installée récupéreront cette version toutes seules ; elle sera
+            active au démarrage suivant.
+
+            **Première installation :** téléchargez le fichier `.apk`
+            ci-dessous depuis le téléphone et ouvrez-le.
+
+            Modification : ${{ github.event.inputs.notes || github.event.head_commit.message }}
+          files: |
+            release/Yumi-${{ steps.version.outputs.version }}.apk
+            release/yumi-${{ steps.version.outputs.version }}.zip
+            release/latest.json
+          fail_on_unmatched_files: true
+
+      - name: Récapitulatif
+        run: |
+          {
+            echo "## Yumi ${{ steps.version.outputs.version }} publiée"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| APK | \`Yumi-${{ steps.version.outputs.version }}.apk\` |"
+            echo "| Paquet de mise à jour | \`yumi-${{ steps.version.outputs.version }}.zip\` |"
+            echo "| Empreinte | \`$(node -p "require('./release/latest.json').checksum")\` |"
+            echo ""
+            echo "Les installations existantes se mettront à jour au prochain démarrage."
+          } >> "$GITHUB_STEP_SUMMARY"

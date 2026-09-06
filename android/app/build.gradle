@@ -1,0 +1,88 @@
+apply plugin: 'com.android.application'
+
+// -----------------------------------------------------------------------------
+// Version et signature
+// -----------------------------------------------------------------------------
+// La version vient de package.json : une seule source de vérité pour le web,
+// le paquet de mise à jour et l'APK. `versionCode` est fourni par le pipeline
+// (numéro de build GitHub), à défaut 1 pour une compilation locale.
+def pkg = new groovy.json.JsonSlurper().parse(file('../../package.json'))
+def appVersionName = pkg.version
+def appVersionCode = (System.getenv('YUMI_VERSION_CODE') ?: '1') as Integer
+
+// Le keystore n'est jamais dans le dépôt. Le pipeline le restaure depuis les
+// secrets GitHub ; en local, on compile en debug si ces variables sont absentes.
+def keystorePath = System.getenv('YUMI_KEYSTORE_PATH')
+def hasReleaseKey = keystorePath != null && !keystorePath.isEmpty() && file(keystorePath).exists()
+
+android {
+    namespace "app.yumi.learn"
+    compileSdk rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "app.yumi.learn"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode appVersionCode
+        versionName appVersionName
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    signingConfigs {
+        if (hasReleaseKey) {
+            release {
+                storeFile file(keystorePath)
+                storePassword System.getenv('YUMI_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('YUMI_KEY_ALIAS') ?: 'yumi'
+                keyPassword System.getenv('YUMI_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (hasReleaseKey) {
+                signingConfig signingConfigs.release
+            } else {
+                // Sans clé, l'APK sort non signé et Android refusera de
+                // l'installer. Le pipeline de publication, lui, fournit
+                // toujours la clé depuis les secrets du dépôt.
+                logger.warn('YUMI: aucune clé de signature fournie — APK release non signé.')
+            }
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

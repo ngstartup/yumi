@@ -1,0 +1,131 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --yumi-blue: #2f62f0;
+    --yumi-sun: #ffbe1f;
+    /* Encoches et barres système. Valent 0 partout ailleurs : la règle est la
+       même dans le navigateur et dans l'application installée. */
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Clavier ouvert (application native) : la barre d'onglets du bas se poserait
+     sur le clavier, juste au-dessus du champ en cours de saisie. */
+  html[data-keyboard='open'] [data-bottom-nav] {
+    display: none;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-surface text-ink font-sans antialiased;
+    margin: 0;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Visible, consistent keyboard focus everywhere. */
+  :focus-visible {
+    outline: 3px solid #5a87fa;
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
+
+  ::selection {
+    background: #d9e6ff;
+    color: #0b1b34;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .yumi-skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white;
+  }
+
+  .yumi-grid-bg {
+    background-image: radial-gradient(circle at 1px 1px, rgba(47, 98, 240, 0.14) 1px, transparent 0);
+    background-size: 28px 28px;
+  }
+
+  /* Curseur de volume — piste remplie à gauche du pouce, cible tactile large. */
+  .yumi-range {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 26px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .yumi-range::-webkit-slider-runnable-track {
+    height: 8px;
+    border-radius: 9999px;
+    background: linear-gradient(
+      to right,
+      #2f62f0 0%,
+      #2f62f0 var(--yumi-range-fill, 0%),
+      #edf1f9 var(--yumi-range-fill, 0%),
+      #edf1f9 100%
+    );
+  }
+  .yumi-range::-moz-range-track {
+    height: 8px;
+    border-radius: 9999px;
+    background: #edf1f9;
+  }
+  .yumi-range::-moz-range-progress {
+    height: 8px;
+    border-radius: 9999px;
+    background: #2f62f0;
+  }
+  .yumi-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    margin-top: -7px;
+    height: 22px;
+    width: 22px;
+    border-radius: 9999px;
+    background: #ffffff;
+    border: 3px solid #2f62f0;
+    box-shadow: 0 2px 6px rgba(11, 27, 52, 0.22);
+  }
+  .yumi-range::-moz-range-thumb {
+    height: 22px;
+    width: 22px;
+    border: 3px solid #2f62f0;
+    border-radius: 9999px;
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(11, 27, 52, 0.22);
+  }
+  .yumi-range:disabled::-webkit-slider-thumb,
+  .yumi-range:disabled::-moz-range-thumb {
+    border-color: #b7ceff;
+  }
+
+  .yumi-scroll-x {
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+  .yumi-scroll-x::-webkit-scrollbar {
+    height: 6px;
+  }
+  .yumi-scroll-x::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-blue-100;
+  }
+}
