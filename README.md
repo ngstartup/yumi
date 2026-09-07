@@ -46,11 +46,11 @@ certificat · fonctionnement hors connexion.
 
 **Contenu pédagogique réel**
 
-41 leçons, ~360 mots et expressions, 5 parcours :
+57 leçons, ~490 mots et expressions, 5 parcours :
 
 | Parcours | Niveaux fournis | Unités |
 | --- | --- | --- |
-| Anglais général | A1, A2 | 12 |
+| Anglais général | A1, A2, B1 | 22 |
 | Business English | B1 | 2 |
 | Anglais académique | B1 | 1 |
 | Anglais pour voyager | A2 | 2 |

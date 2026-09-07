@@ -1,6 +1,7 @@
 import { buildSections } from './builder';
 import { GENERAL_A1 } from './general-a1';
 import { GENERAL_A2 } from './general-a2';
+import { GENERAL_B1 } from './general-b1';
 import { BUSINESS_B1 } from './business';
 import { ACADEMIC_B1 } from './academic';
 import { TRAVEL_A2 } from './travel';
@@ -66,6 +67,7 @@ export const TRACKS: Record<TrackKey, Track> = {
     levels: [
       { level: 'A1', sections: buildSections(GENERAL_A1, 'general', 'A1') },
       { level: 'A2', sections: buildSections(GENERAL_A2, 'general', 'A2') },
+      { level: 'B1', sections: buildSections(GENERAL_B1, 'general', 'B1') },
     ],
   },
   business: {
