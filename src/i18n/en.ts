@@ -92,6 +92,10 @@ export const en: DeepPartial<Dictionary> = {
     noReview: 'Nothing to review. Nicely done.',
     quickStats: 'This week',
     startFirst: 'Start my first lesson',
+    trackActive: 'Active',
+    trackSwitch: 'Switch',
+    trackSwitchAria: 'Switch to the {name} track',
+    versionLine: 'Yumi {v}',
   },
 
   lesson: {

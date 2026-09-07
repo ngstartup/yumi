@@ -161,6 +161,10 @@ export const fr = {
     noReview: 'Aucune révision en attente. Beau travail.',
     quickStats: 'Cette semaine',
     startFirst: 'Commencer ma première leçon',
+    trackActive: 'Actif',
+    trackSwitch: 'Activer',
+    trackSwitchAria: 'Activer le parcours {name}',
+    versionLine: 'Yumi {v}',
   },
 
   learn: {

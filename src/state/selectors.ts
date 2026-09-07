@@ -92,6 +92,26 @@ export function nextLesson(
   return pool.find((l) => progress[l.id]?.status !== 'completed') ?? null;
 }
 
+/**
+ * Leçon qui suit immédiatement celle-ci dans l'ordre du parcours.
+ *
+ * C'est la destination attendue après « Continuer » à la fin d'une leçon.
+ * `nextLesson` ne convient pas ici : elle renvoie la première leçon *non
+ * terminée*, or au moment où l'écran de fin se construit la leçon courante
+ * n'est pas encore enregistrée comme terminée — elle se désignait donc
+ * elle-même, le bouton basculait sur « retour au parcours » et renvoyait au
+ * sommaire de l'unité au lieu d'enchaîner.
+ *
+ * Ne dépend d'aucune progression : l'ordre du parcours suffit, et le résultat
+ * est le même avant et après l'enregistrement de la leçon.
+ */
+export function lessonAfter(trackId: TrackKey, lessonId: string): Lesson | null {
+  const lessons = lessonsOfTrack(trackId);
+  const idx = lessons.findIndex((l) => l.id === lessonId);
+  if (idx < 0) return null;
+  return lessons[idx + 1] ?? null;
+}
+
 export function trackCompletion(
   trackId: TrackKey,
   progress: Record<string, LessonProgressRecord>

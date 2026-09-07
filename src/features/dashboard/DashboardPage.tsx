@@ -8,6 +8,7 @@ import { useApp } from '@/state/store';
 import { TRACK_META, getUnit } from '@/content';
 import { dueForReview, formatDuration, nextLesson, totalWeekXp, trackCompletion, weeklyXp } from '@/state/selectors';
 import { goalXp } from '@/engine/xp';
+import { NATIVE_VERSION } from '@/native';
 
 export function DashboardPage() {
   const t = useT();
@@ -195,7 +196,11 @@ export function DashboardPage() {
                       {c.done}/{c.total} {t('learn.lessons')}
                     </p>
                   </div>
-                  {active ? <Chip tone="blue">Actif</Chip> : <SwitchTrackButton trackKey={key} />}
+                  {active ? (
+                    <Chip tone="blue">{t('dashboard.trackActive')}</Chip>
+                  ) : (
+                    <SwitchTrackButton trackKey={key} />
+                  )}
                 </div>
                 <ProgressBar value={c.percent} size="sm" className="mt-3" tone={active ? 'blue' : 'sun'} />
               </Card>
@@ -203,20 +208,28 @@ export function DashboardPage() {
           })}
         </div>
       </section>
+
+      {/* Version du code réellement exécuté. La constante est recompilée dans
+          chaque paquet de mise à jour : elle change donc toute seule quand une
+          nouvelle version descend sur le téléphone. */}
+      <p className="pt-1 text-center text-xs tabular-nums text-ink-muted">
+        {t('dashboard.versionLine', { v: NATIVE_VERSION })}
+      </p>
     </div>
   );
 }
 
 function SwitchTrackButton({ trackKey }: { trackKey: keyof typeof TRACK_META }) {
+  const t = useT();
   const updateProfile = useApp((s) => s.updateProfile);
   return (
     <Button
       size="sm"
       variant="ghost"
       onClick={() => void updateProfile({ activeTrack: trackKey })}
-      aria-label={`Activer le parcours ${TRACK_META[trackKey].name}`}
+      aria-label={t('dashboard.trackSwitchAria', { name: TRACK_META[trackKey].name })}
     >
-      Activer
+      {t('dashboard.trackSwitch')}
     </Button>
   );
 }

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { grade } from '@/engine/grading';
 import { generateExercises } from '@/engine/generator';
-import { getLesson } from '@/content';
+import { getLesson, lessonsOfTrack } from '@/content';
+import { lessonAfter } from '@/state/selectors';
 import { difficultyWindow, selectExercises } from '@/engine/selection';
 import { isDue, masteryOf, newMemory, review } from '@/engine/srs';
 import { dayKey, effectiveStreak, emptyStreak, registerActivity } from '@/engine/streak';
@@ -235,5 +236,40 @@ describe('test de placement', () => {
       q = nextQuestion(state);
     }
     expect(new Set(state.askedIds).size).toBe(state.askedIds.length);
+  });
+});
+
+describe('enchaînement des leçons', () => {
+  const lessons = lessonsOfTrack('general');
+
+  it('désigne la leçon suivante dans l’ordre du parcours', () => {
+    expect(lessonAfter('general', lessons[0].id)?.id).toBe(lessons[1].id);
+    expect(lessonAfter('general', lessons[3].id)?.id).toBe(lessons[4].id);
+  });
+
+  it('ne se désigne jamais elle-même', () => {
+    // C'est précisément le défaut corrigé : la destination de « Continuer »
+    // était calculée avant l'enregistrement de la leçon, si bien que la leçon
+    // en cours se renvoyait à elle-même et le bouton retombait sur
+    // « retour au parcours » au lieu d'enchaîner.
+    for (const l of lessons) {
+      expect(lessonAfter('general', l.id)?.id).not.toBe(l.id);
+    }
+  });
+
+  it('ne dépend pas de la progression : le résultat est le même avant et après', () => {
+    const before = lessonAfter('general', lessons[2].id);
+    const after = lessonAfter('general', lessons[2].id);
+    expect(before?.id).toBe(after?.id);
+  });
+
+  it('renvoie null sur la dernière leçon, ce qui ramène au parcours', () => {
+    expect(lessonAfter('general', lessons[lessons.length - 1].id)).toBeNull();
+  });
+
+  it('renvoie null pour une leçon absente du parcours', () => {
+    expect(lessonAfter('general', 'lecon-inexistante')).toBeNull();
+    // Une leçon d'un autre parcours n'appartient pas à celui-ci.
+    expect(lessonAfter('general', lessonsOfTrack('business')[0].id)).toBeNull();
   });
 });

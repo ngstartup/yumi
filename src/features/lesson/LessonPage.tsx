@@ -7,7 +7,7 @@ import { getLesson, getUnit } from '@/content';
 import { selectExercises } from '@/engine/selection';
 import { recognitionAvailable } from '@/lib/tts';
 import { useApp } from '@/state/store';
-import { nextLesson } from '@/state/selectors';
+import { lessonAfter } from '@/state/selectors';
 import { track } from '@/lib/analytics';
 import { SessionPlayer } from './SessionPlayer';
 
@@ -16,7 +16,6 @@ export function LessonPage() {
   const { lessonId = '' } = useParams();
   const profile = useApp((s) => s.profile);
   const memories = useApp((s) => s.memories);
-  const progress = useApp((s) => s.lessonProgress);
 
   const lesson = getLesson(lessonId);
 
@@ -36,7 +35,10 @@ export function LessonPage() {
   if (!lesson || !profile) return <Navigate to="/app/learn" replace />;
 
   const unit = getUnit(lesson.unitId);
-  const upcoming = nextLesson(profile.activeTrack, profile.level, progress);
+  // La suite se lit dans l'ordre du parcours de la leçon en cours, pas dans le
+  // parcours actif du profil : l'apprenant peut très bien travailler une leçon
+  // d'un autre parcours, et « Continuer » doit rester la leçon d'après.
+  const upcoming = lessonAfter(lesson.trackId, lesson.id);
 
   return (
     <SessionPlayer
@@ -45,8 +47,8 @@ export function LessonPage() {
       title={unit?.title ?? lesson.title}
       subtitle={lesson.title}
       exitTo={`/app/learn/${lesson.unitId}`}
-      continueTo={upcoming && upcoming.id !== lesson.id ? `/lesson/${upcoming.id}` : `/app/learn/${lesson.unitId}`}
-      continueLabel={upcoming && upcoming.id !== lesson.id ? t('lesson.continueLearning') : t('lesson.backToPath')}
+      continueTo={upcoming ? `/lesson/${upcoming.id}` : `/app/learn/${lesson.unitId}`}
+      continueLabel={upcoming ? t('lesson.continueLearning') : t('lesson.backToPath')}
       intro={
         <div>
           <div className="flex items-center gap-4">

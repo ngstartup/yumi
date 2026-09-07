@@ -217,7 +217,8 @@ Aucune clé secrète ne doit être commitée. En local-first, aucune variable n'
 
 ## Tests
 
-- **Unitaires** (`npm test`) — 50 tests : correction des 11 types d'exercices, tolérance
+- **Unitaires** (`npm test`) — 55 tests : correction des 11 types d'exercices, enchaînement
+  des leçons après « Continuer », tolérance
   aux fautes de frappe, répétition espacée, série quotidienne, XP, badges, sélection
   adaptative, test de placement, service de retour sensoriel (bornes de volume, mise à
   l'échelle des motifs haptiques, inertie hors navigateur, migration des anciens réglages),
