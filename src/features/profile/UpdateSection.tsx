@@ -45,7 +45,10 @@ export function UpdateSection() {
         push(t('profile.update.needsApk'), 'warning');
         break;
       case 'error':
-        push(t('profile.update.error'), 'error');
+        // La cause est affichée : sans elle, « manifeste injoignable » et
+        // « téléchargement refusé » produisaient le même message, impossible
+        // à distinguer depuis un téléphone.
+        push(`${t('profile.update.error')} (${outcome.reason})`, 'error');
         break;
       default:
         break;

@@ -24,6 +24,7 @@
  * jamais, et le système restaure tout seul la version précédente.
  */
 
+import { CapacitorHttp } from '@capacitor/core';
 import { CapacitorUpdater, type BundleInfo } from '@capgo/capacitor-updater';
 import { isNative } from './platform';
 
@@ -104,14 +105,45 @@ export async function markAppReady(): Promise<void> {
   }
 }
 
+/** Valide la forme du manifeste : sans version ni url, il n'y a rien à faire. */
+function asManifest(data: unknown): UpdateManifest | null {
+  const m = data as UpdateManifest | null;
+  return m?.version && m?.url ? m : null;
+}
+
+/**
+ * Lit le manifeste publié sur les Releases.
+ *
+ * En natif, la requête passe par `CapacitorHttp` et non par `fetch`. Ce n'est
+ * pas un détail d'implémentation : GitHub ne renvoie **aucun en-tête CORS** sur
+ * les fichiers de Release, et la WebView (origine `https://localhost`) rejette
+ * donc un `fetch` avant même qu'il atteigne le réseau. La mise à jour semblait
+ * alors introuvable alors que le manifeste était parfaitement en ligne.
+ * `CapacitorHttp` exécute la requête côté natif, où la politique d'origine ne
+ * s'applique pas.
+ *
+ * Le paquet lui-même n'a jamais été concerné : `CapacitorUpdater.download()`
+ * télécharge déjà nativement.
+ */
 async function fetchManifest(): Promise<UpdateManifest | null> {
+  // Paramètre anti-cache : sans lui, un manifeste périmé peut être resservi et
+  // l'application resterait indéfiniment sur une version ancienne.
+  const url = `${MANIFEST_URL}?t=${Date.now()}`;
   try {
-    // `no-store` : sans cela, la WebView peut resservir un manifeste périmé et
-    // l'application resterait indéfiniment sur une version ancienne.
-    const res = await fetch(`${MANIFEST_URL}?t=${Date.now()}`, { cache: 'no-store' });
+    if (isNative()) {
+      const res = await CapacitorHttp.get({
+        url,
+        headers: { 'Cache-Control': 'no-cache' },
+      });
+      if (res.status < 200 || res.status >= 300) return null;
+      // GitHub sert le fichier en `application/octet-stream` : selon la
+      // plateforme, `data` arrive déjà décodé ou encore sous forme de texte.
+      const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+      return asManifest(data);
+    }
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return null;
-    const data = (await res.json()) as UpdateManifest;
-    return data?.version && data?.url ? data : null;
+    return asManifest(await res.json());
   } catch {
     return null;
   }
