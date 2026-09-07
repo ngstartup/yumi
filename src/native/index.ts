@@ -12,9 +12,10 @@ import { Keyboard } from '@capacitor/keyboard';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { Style, StatusBar } from '@capacitor/status-bar';
 import { setHapticDriver } from '@/lib/feedback';
-import { setSpeechProvider } from '@/lib/tts';
+import { setSpeechProvider, setVoiceDriver } from '@/lib/tts';
 import { nativeHapticDriver } from './haptics';
 import { nativeSpeechProvider, probeNativeSpeech } from './speech';
+import { nativeVoiceDriver, probeNativeVoice } from './voice';
 import { checkForUpdate, markAppReady, updatesSupported } from './updates';
 import { isNative, pluginAvailable, platform } from './platform';
 
@@ -136,7 +137,14 @@ export function initNative(): Cleanup {
     if (ok) setSpeechProvider(nativeSpeechProvider);
   });
 
-  // 3. Habillage système et cycle de vie.
+  // 3. Synthèse vocale — sans elle les exercices d'écoute sont muets : la
+  //    WebView Android expose `speechSynthesis` mais aucune voix. On n'installe
+  //    le pilote qu'une fois une voix anglaise confirmée sur l'appareil.
+  void probeNativeVoice().then((ok) => {
+    if (ok) setVoiceDriver(nativeVoiceDriver);
+  });
+
+  // 4. Habillage système et cycle de vie.
   void setupStatusBar();
   const cleanups = [setupKeyboard(), setupBackButton(), setupUpdateChecks()];
 
@@ -144,6 +152,7 @@ export function initNative(): Cleanup {
     for (const c of cleanups) c();
     setHapticDriver(null);
     setSpeechProvider(null);
+    setVoiceDriver(null);
   };
 }
 

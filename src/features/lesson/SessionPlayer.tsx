@@ -27,7 +27,13 @@ interface Props {
   onFinished?: (summary: SessionSummary, outcomes: SessionOutcome[]) => void;
 }
 
-type Phase = 'intro' | 'playing' | 'complete';
+/**
+ * `correctionIntro` et `correction` s'intercalent entre la dernière réponse et
+ * l'écran de résultat : on ne félicite pas quelqu'un avant de lui avoir laissé
+ * l'occasion de reprendre ce qu'il a raté. La manche n'est proposée que s'il y
+ * a réellement des erreurs, et reste facultative.
+ */
+type Phase = 'intro' | 'playing' | 'correctionIntro' | 'correction' | 'complete';
 
 export function SessionPlayer({
   exercises,
@@ -56,13 +62,20 @@ export function SessionPlayer({
   const [summary, setSummary] = useState<SessionSummary | null>(null);
   const [confirmQuit, setConfirmQuit] = useState(false);
   const [saving, setSaving] = useState(false);
+  /** Exercices ratés, rejoués pendant la manche de correction. */
+  const [toCorrect, setToCorrect] = useState<Exercise[]>([]);
+  /** Résultats de la manche principale, mis de côté le temps de la correction :
+   *  ce sont eux, et eux seuls, qui seront enregistrés. */
+  const [pending, setPending] = useState<SessionOutcome[] | null>(null);
 
   const startedAt = useRef(Date.now());
   const questionStart = useRef(Date.now());
   const feedbackRef = useRef<HTMLDivElement>(null);
 
-  const exercise = exercises[index];
-  const total = exercises.length;
+  const correcting = phase === 'correction';
+  const activeList = correcting ? toCorrect : exercises;
+  const exercise = activeList[index];
+  const total = activeList.length;
 
   useEffect(() => {
     questionStart.current = Date.now();
@@ -111,8 +124,46 @@ export function SessionPlayer({
     window.setTimeout(() => feedbackRef.current?.focus(), 40);
   }
 
+  /**
+   * Fin de la manche principale : on propose la correction s'il y a matière,
+   * sinon on enregistre directement.
+   */
+  const endMainRound = useCallback(
+    (all: SessionOutcome[]) => {
+      const missed = all.filter((o) => !o.correct).map((o) => o.exercise);
+      if (missed.length === 0) {
+        void finish(all);
+        return;
+      }
+      setPending(all);
+      setToCorrect(missed);
+      setIndex(0);
+      setCombo(0);
+      setPhase('correctionIntro');
+    },
+    [finish]
+  );
+
+  /** Avance d'un cran, quelle que soit la manche en cours. */
+  function advance(all: SessionOutcome[]) {
+    setResult(null);
+    setAnswer(null);
+    if (index + 1 < total) {
+      setIndex(index + 1);
+      return;
+    }
+    // La manche de correction ne produit aucun résultat enregistré : elle sert
+    // à réapprendre, pas à rattraper une note déjà obtenue.
+    if (correcting) void finish(pending ?? all);
+    else endMainRound(all);
+  }
+
   function next() {
     if (!exercise || !result) return;
+    if (correcting) {
+      advance(outcomes);
+      return;
+    }
     const outcome: SessionOutcome = {
       exercise,
       correct: result.correct,
@@ -122,14 +173,16 @@ export function SessionPlayer({
     };
     const all = [...outcomes, outcome];
     setOutcomes(all);
-    setResult(null);
-    setAnswer(null);
-    if (index + 1 >= total) void finish(all);
-    else setIndex(index + 1);
+    advance(all);
   }
 
   function skip() {
     if (!exercise) return;
+    setCombo(0);
+    if (correcting) {
+      advance(outcomes);
+      return;
+    }
     const all = [
       ...outcomes,
       {
@@ -141,11 +194,7 @@ export function SessionPlayer({
       },
     ];
     setOutcomes(all);
-    setResult(null);
-    setAnswer(null);
-    setCombo(0);
-    if (index + 1 >= total) void finish(all);
-    else setIndex(index + 1);
+    advance(all);
   }
 
   const mascotExpression: Expression = result
@@ -175,6 +224,45 @@ export function SessionPlayer({
     );
   }
 
+  // ---- Reprise des erreurs ------------------------------------------------
+  if (phase === 'correctionIntro') {
+    const n = toCorrect.length;
+    return (
+      <div className="mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center px-5 py-10">
+        <div className="flex flex-col items-center text-center">
+          <Fox size={112} expression="encouraging" animate />
+          <h1 className="mt-4 font-display text-2xl font-extrabold tracking-tight text-ink">
+            {t('lesson.correctionTitle')}
+          </h1>
+          <p className="mt-2 text-[15px] leading-relaxed text-ink-muted">
+            {n === 1 ? t('lesson.correctionIntroOne') : t('lesson.correctionIntroMany', { n })}
+          </p>
+          <p className="mt-3 text-xs text-ink-muted">{t('lesson.correctionNote')}</p>
+        </div>
+        <div className="mt-8 space-y-2.5">
+          <Button
+            block
+            size="lg"
+            onClick={() => {
+              setIndex(0);
+              setPhase('correction');
+            }}
+          >
+            {t('lesson.correctionStart')}
+          </Button>
+          <Button
+            variant="ghost"
+            block
+            loading={saving}
+            onClick={() => void finish(pending ?? outcomes)}
+          >
+            {t('lesson.correctionSkip')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // ---- Fin de session -----------------------------------------------------
   if (phase === 'complete' && summary) {
     return (
@@ -198,7 +286,7 @@ export function SessionPlayer({
   return (
     <SessionShell
       title={title}
-      subtitle={subtitle}
+      subtitle={correcting ? t('lesson.correctionPhase') : subtitle}
       onQuit={() => setConfirmQuit(true)}
       progress={index}
       total={total}

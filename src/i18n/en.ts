@@ -112,6 +112,13 @@ export const en: DeepPartial<Dictionary> = {
     progressGain: 'Progress',
     continueLearning: 'Continue',
     backToPath: 'Back to path',
+    correctionPhase: 'Correction',
+    correctionTitle: 'Let’s go over your mistakes',
+    correctionIntroOne: 'One exercise slipped through. Let’s redo it before moving on — this is where the learning happens.',
+    correctionIntroMany: '{n} exercises slipped through. Let’s redo them before moving on — this is where the learning happens.',
+    correctionStart: 'Fix my mistakes',
+    correctionSkip: 'Skip and see my result',
+    correctionNote: 'This round changes neither your score nor your XP.',
   },
 
   profile: {

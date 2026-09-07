@@ -178,6 +178,13 @@ un navigateur. Elle traite trois points qu'une simple mise en coquille laisse ca
 - **Reconnaissance vocale.** La Web Speech API est absente d'iOS et dépend du réseau chez
   Chrome. `src/lib/tts.ts` définit une interface `SpeechProvider` ; le moteur du système
   remplace l'implémentation web au démarrage, sans qu'aucun écran change d'appel.
+- **Synthèse vocale.** Dans une WebView Android, `window.speechSynthesis` existe mais ne
+  dispose d'aucune voix : l'API répond présente, `speak()` ne produit aucun son, et les
+  exercices d'écoute deviennent muets sans la moindre erreur. `VoiceDriver` répond au même
+  principe que l'haptique — le moteur vocal du système est installé au démarrage, et
+  seulement après confirmation qu'une voix anglaise existe sur l'appareil : sans elle, le
+  moteur lirait l'anglais avec la phonétique de la langue système, ce qui est pire que le
+  silence pour un exercice de compréhension orale.
 
 **Mise à jour à distance.** Modifier le code, pousser sur `main`, et la nouvelle version
 descend sur les téléphones au démarrage suivant — sans réinstaller l'APK. Le pipeline
@@ -217,8 +224,8 @@ Aucune clé secrète ne doit être commitée. En local-first, aucune variable n'
 
 ## Tests
 
-- **Unitaires** (`npm test`) — 55 tests : correction des 11 types d'exercices, enchaînement
-  des leçons après « Continuer », tolérance
+- **Unitaires** (`npm test`) — 61 tests : correction des 11 types d'exercices, enchaînement
+  des leçons après « Continuer », pilote de synthèse vocale injectable, tolérance
   aux fautes de frappe, répétition espacée, série quotidienne, XP, badges, sélection
   adaptative, test de placement, service de retour sensoriel (bornes de volume, mise à
   l'échelle des motifs haptiques, inertie hors navigateur, migration des anciens réglages),

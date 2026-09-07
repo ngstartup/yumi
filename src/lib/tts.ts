@@ -1,19 +1,36 @@
 /** Synthèse et reconnaissance vocales.
  *
- *  L'audio des exercices d'écoute est produit par la synthèse vocale du
- *  navigateur : aucun fichier son à télécharger, donc un fonctionnement hors
- *  connexion réel et une app légère. Si l'API manque, les composants dégradent
- *  proprement (le texte reste affichable). */
+ *  L'audio des exercices d'écoute est synthétisé à la volée : aucun fichier son
+ *  à télécharger, donc un fonctionnement hors connexion réel et une application
+ *  légère.
+ *
+ *  Deux moteurs derrière une même interface, comme pour la reconnaissance :
+ *    • `webVoiceDriver` — `window.speechSynthesis`, parfait dans un navigateur ;
+ *    • le pilote natif installé par l'empaquetage mobile (`src/native/voice.ts`).
+ *
+ *  Cette séparation n'est pas décorative. Dans une WebView Android,
+ *  `speechSynthesis` **existe mais ne dispose d'aucune voix** : l'API répond
+ *  présente, `speak()` ne produit aucun son, et les exercices d'écoute
+ *  deviennent muets sans qu'aucune erreur ne soit levée. Seul le moteur vocal
+ *  du système parle réellement sur un téléphone. */
+
+export interface VoiceDriver {
+  readonly id: 'web' | 'native';
+  /** Réponse synchrone : appelée pendant le rendu pour masquer le bouton d'écoute. */
+  available(): boolean;
+  speak(text: string, options: { rate?: number }): void;
+  stop(): void;
+}
 
 let cachedVoice: SpeechSynthesisVoice | null | undefined;
 
-export function speechAvailable(): boolean {
+function synthesisPresent(): boolean {
   return typeof window !== 'undefined' && 'speechSynthesis' in window;
 }
 
 function pickVoice(): SpeechSynthesisVoice | null {
   if (cachedVoice !== undefined) return cachedVoice;
-  if (!speechAvailable()) return (cachedVoice = null);
+  if (!synthesisPresent()) return (cachedVoice = null);
   const voices = window.speechSynthesis.getVoices();
   if (voices.length === 0) return null; // pas encore chargées — on réessaiera
   const preferred =
@@ -25,36 +42,65 @@ function pickVoice(): SpeechSynthesisVoice | null {
   return preferred;
 }
 
-if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+if (synthesisPresent()) {
   window.speechSynthesis.onvoiceschanged = () => {
     cachedVoice = undefined;
     pickVoice();
   };
 }
 
-export function speak(text: string, options: { rate?: number } = {}): void {
-  if (!speechAvailable() || !text) return;
-  try {
+export const webVoiceDriver: VoiceDriver = {
+  id: 'web',
+  available: synthesisPresent,
+  speak(text, options) {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    const voice = pickVoice();
-    if (voice) u.voice = voice;
-    u.lang = voice?.lang ?? 'en-GB';
+    const v = pickVoice();
+    if (v) u.voice = v;
+    u.lang = v?.lang ?? 'en-GB';
     u.rate = options.rate ?? 0.95;
     u.pitch = 1;
     window.speechSynthesis.speak(u);
+  },
+  stop() {
+    if (synthesisPresent()) window.speechSynthesis.cancel();
+  },
+};
+
+let voiceDriver: VoiceDriver = webVoiceDriver;
+
+/** Installe un pilote (appelé par la couche native). `null` revient au web. */
+export function setVoiceDriver(next: VoiceDriver | null): void {
+  voiceDriver = next ?? webVoiceDriver;
+}
+
+/** Pilote actif — utile aux réglages et au diagnostic. */
+export function voiceDriverId(): VoiceDriver['id'] {
+  return voiceDriver.id;
+}
+
+export function speechAvailable(): boolean {
+  try {
+    return voiceDriver.available();
+  } catch {
+    return false;
+  }
+}
+
+export function speak(text: string, options: { rate?: number } = {}): void {
+  if (!text) return;
+  try {
+    if (voiceDriver.available()) voiceDriver.speak(text, options);
   } catch {
     /* la lecture audio n'est jamais bloquante */
   }
 }
 
 export function stopSpeaking(): void {
-  if (speechAvailable()) {
-    try {
-      window.speechSynthesis.cancel();
-    } catch {
-      /* ignore */
-    }
+  try {
+    voiceDriver.stop();
+  } catch {
+    /* ignore */
   }
 }
 

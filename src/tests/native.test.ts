@@ -13,7 +13,12 @@ import {
   recognitionAvailable,
   listenOnce,
   setSpeechProvider,
+  setVoiceDriver,
+  speak,
+  speechAvailable,
   speechProviderId,
+  stopSpeaking,
+  voiceDriverId,
   webSpeechProvider,
   type SpeechProvider,
 } from '@/lib/tts';
@@ -183,5 +188,82 @@ describe('comparaison de versions', () => {
   it('ne propose aucune mise à jour hors application installée', async () => {
     expect(updatesSupported()).toBe(false);
     await expect(checkForUpdate()).resolves.toEqual({ status: 'unsupported' });
+  });
+});
+
+describe('pilote de synthèse vocale', () => {
+  beforeEach(() => setVoiceDriver(null));
+
+  it('utilise le pilote du navigateur par défaut, muet hors navigateur', () => {
+    expect(voiceDriverId()).toBe('web');
+    expect(speechAvailable()).toBe(false);
+    expect(() => speak('hello')).not.toThrow();
+  });
+
+  it('bascule sur le moteur du système sans qu’aucun écran change d’appel', () => {
+    // C'est exactement le cas de la WebView Android : `speechSynthesis` répond
+    // présent mais ne dispose d'aucune voix, donc aucun son ne sort. Le pilote
+    // natif est le seul à parler réellement.
+    const spoken: string[] = [];
+    setVoiceDriver({
+      id: 'native',
+      available: () => true,
+      speak: (text) => spoken.push(text),
+      stop: () => undefined,
+    });
+
+    expect(voiceDriverId()).toBe('native');
+    expect(speechAvailable()).toBe(true);
+    speak('She works in London.');
+    expect(spoken).toEqual(['She works in London.']);
+  });
+
+  it('ne sollicite pas un pilote qui se déclare indisponible', () => {
+    const spoken: string[] = [];
+    setVoiceDriver({
+      id: 'native',
+      available: () => false,
+      speak: (text) => spoken.push(text),
+      stop: () => undefined,
+    });
+    speak('hello');
+    expect(spoken).toHaveLength(0);
+  });
+
+  it('ne lit jamais une chaîne vide', () => {
+    const spoken: string[] = [];
+    setVoiceDriver({
+      id: 'native',
+      available: () => true,
+      speak: (text) => spoken.push(text),
+      stop: () => undefined,
+    });
+    speak('');
+    expect(spoken).toHaveLength(0);
+  });
+
+  it('survit à un pilote qui lève une exception', () => {
+    setVoiceDriver({
+      id: 'native',
+      available: () => true,
+      speak() {
+        throw new Error('moteur vocal occupé');
+      },
+      stop() {
+        throw new Error('moteur vocal occupé');
+      },
+    });
+    expect(() => {
+      speak('hello');
+      stopSpeaking();
+    }).not.toThrow();
+  });
+
+  it('revient au pilote du navigateur quand on le retire', () => {
+    setVoiceDriver({ id: 'native', available: () => true, speak: () => undefined, stop: () => undefined });
+    expect(speechAvailable()).toBe(true);
+    setVoiceDriver(null);
+    expect(voiceDriverId()).toBe('web');
+    expect(speechAvailable()).toBe(false);
   });
 });
