@@ -22,6 +22,7 @@ import { localAuth } from '@/auth/localAuth';
 import { AuthFailure } from '@/auth/types';
 import { TRACK_META, TRACK_KEYS } from '@/content';
 import { UpdateSection } from './UpdateSection';
+import { VoiceSection } from './VoiceSection';
 import {
   feedback,
   hapticsSupported,
@@ -314,6 +315,9 @@ export function ProfilePage() {
                 {t('profile.feedback.testHaptics')}
               </Button>
             </div>
+
+            {/* — Voix des exercices d'écoute — */}
+            <VoiceSection />
           </Card>
         </section>
       )}

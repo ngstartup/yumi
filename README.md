@@ -152,7 +152,9 @@ Aucun écran à modifier.
 
 Une file de synchronisation (`syncQueue`) enregistre les écritures ; elle est rejouée au
 retour de la connexion. L'audio des exercices d'écoute est produit par la synthèse vocale
-du navigateur : aucun fichier son à télécharger, donc un vrai fonctionnement hors ligne.
+de l'appareil : aucun fichier son à télécharger, donc un vrai fonctionnement hors ligne.
+Les polices Inter et Sora sont embarquées dans la build (`src/fonts.css`, sous-ensemble
+latin, woff2 seul) : plus aucune requête réseau ne bloque le premier rendu au lancement.
 
 ### Internationalisation
 
@@ -181,10 +183,16 @@ un navigateur. Elle traite trois points qu'une simple mise en coquille laisse ca
 - **Synthèse vocale.** Dans une WebView Android, `window.speechSynthesis` existe mais ne
   dispose d'aucune voix : l'API répond présente, `speak()` ne produit aucun son, et les
   exercices d'écoute deviennent muets sans la moindre erreur. `VoiceDriver` répond au même
-  principe que l'haptique — le moteur vocal du système est installé au démarrage, et
-  seulement après confirmation qu'une voix anglaise existe sur l'appareil : sans elle, le
-  moteur lirait l'anglais avec la phonétique de la langue système, ce qui est pire que le
-  silence pour un exercice de compréhension orale.
+  principe que l'haptique : le moteur vocal du système remplace celui du navigateur au
+  démarrage. Le piège, lui, est ailleurs — le service vocal d'Android met un temps
+  variable à se lier (de 0,2 à plusieurs secondes) et, interrogé trop tôt, jure n'avoir
+  aucune langue. Le pilote est donc **installé sans attendre** (dans une application
+  empaquetée, le moteur système est le seul à pouvoir produire du son) tandis qu'une sonde
+  patiente réessaie en arrière-plan pour choisir la meilleure variante d'anglais, avec
+  repli sur `en-US` puis sur le pilote navigateur si l'appel échoue. **Profil → Son et
+  vibrations** affiche le moteur réellement actif et sa langue ; quand l'appareil n'a
+  aucune voix anglaise, un bouton ouvre l'écran Android d'installation des données
+  vocales.
 
 **Mise à jour à distance.** Modifier le code, pousser sur `main`, et la nouvelle version
 descend sur les téléphones au démarrage suivant — sans réinstaller l'APK. Le pipeline
@@ -224,8 +232,9 @@ Aucune clé secrète ne doit être commitée. En local-first, aucune variable n'
 
 ## Tests
 
-- **Unitaires** (`npm test`) — 61 tests : correction des 11 types d'exercices, enchaînement
-  des leçons après « Continuer », pilote de synthèse vocale injectable, tolérance
+- **Unitaires** (`npm test`) — 63 tests : correction des 11 types d'exercices, enchaînement
+  des leçons après « Continuer », pilote de synthèse vocale injectable et notification de
+  ses abonnés quand le moteur du système se lie enfin, tolérance
   aux fautes de frappe, répétition espacée, série quotidienne, XP, badges, sélection
   adaptative, test de placement, service de retour sensoriel (bornes de volume, mise à
   l'échelle des motifs haptiques, inertie hors navigateur, migration des anciens réglages),
@@ -233,7 +242,9 @@ Aucune clé secrète ne doit être commitée. En local-first, aucune variable n'
   plateforme, comparaison de versions de mise à jour) et intégrité de tout le contenu (identifiants uniques, bonnes réponses
   valides, distracteurs distincts, mot à trou présent dans la phrase).
 - **Bout en bout** (`node scripts/smoke.mjs`) — rejoue le parcours complet dans un
-  navigateur réel, vérifie la persistance après rechargement, les réglages de son et de
+  navigateur réel, y compris la manche de reprise des erreurs, vérifie la persistance après
+  rechargement, le retour à la racine avec une session ouverte (tableau de bord et non page
+  vitrine), les réglages de son et de
   vibrations (volume enregistré, curseur désactivé quand le son est coupé), l'absence de
   débordement horizontal en 390 px et la bannière hors connexion. Captures dans
   `screenshots/`.
@@ -246,5 +257,4 @@ Aucune clé secrète ne doit être commitée. En local-first, aucune variable n'
 2. Étendre le contenu B1 → C2 (aucune modification du moteur nécessaire).
 3. Back-office de contenu (les tables `courses` → `exercise_options` existent déjà).
 4. Export PDF signé des certificats.
-5. Héberger Inter et Sora dans `public/fonts/` — dernière dépendance réseau au démarrage.
-6. Fonctionnalités sociales (les modèles `friendships`, `groups` sont déjà dans le schéma).
+5. Fonctionnalités sociales (les modèles `friendships`, `groups` sont déjà dans le schéma).

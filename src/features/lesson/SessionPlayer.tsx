@@ -121,7 +121,10 @@ export function SessionPlayer({
     else if (nextCombo >= 3) feedback('combo');
     else feedback('correct');
 
-    window.setTimeout(() => feedbackRef.current?.focus(), 40);
+    // Le lecteur d'écran doit annoncer la correction ; en revanche le focus ne
+    // doit surtout pas faire défiler la page, sinon le bouton « Continuer »
+    // glisse sous le doigt au moment même où l'apprenant le vise.
+    window.setTimeout(() => feedbackRef.current?.focus({ preventScroll: true }), 40);
   }
 
   /**
@@ -363,7 +366,7 @@ function SessionShell({
   return (
     <div className="min-h-screen bg-surface">
       {/* Le fond de la barre couvre l'encoche ; son contenu commence dessous. */}
-      <header className="sticky top-0 z-30 border-b border-surface-sunk bg-white/95 pt-[var(--safe-top)] backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-surface-sunk bg-white pt-[var(--safe-top)]">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
           <IconButton label={t('lesson.quit')} onClick={onQuit}>
             <IconX />
@@ -389,7 +392,7 @@ function SessionShell({
 
 function FooterBar({ children }: { children: ReactNode }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-surface-sunk bg-white/95 pb-[var(--safe-bottom)] backdrop-blur">
+    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-surface-sunk bg-white pb-[var(--safe-bottom)]">
       <div className="mx-auto max-w-2xl px-4 py-3">{children}</div>
     </div>
   );

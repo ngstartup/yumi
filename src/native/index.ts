@@ -15,11 +15,12 @@ import { setHapticDriver } from '@/lib/feedback';
 import { setSpeechProvider, setVoiceDriver } from '@/lib/tts';
 import { nativeHapticDriver } from './haptics';
 import { nativeSpeechProvider, probeNativeSpeech } from './speech';
-import { nativeVoiceDriver, probeNativeVoice } from './voice';
+import { installNativeVoice, nativeVoiceDriver } from './voice';
 import { checkForUpdate, markAppReady, updatesSupported } from './updates';
 import { isNative, pluginAvailable, platform } from './platform';
 
 export { isNative, platform, isStandalonePwa } from './platform';
+export { nativeVoiceStatus, openVoiceInstall, type VoiceStatus } from './voice';
 export {
   checkForUpdate,
   currentVersion,
@@ -138,11 +139,12 @@ export function initNative(): Cleanup {
   });
 
   // 3. Synthèse vocale — sans elle les exercices d'écoute sont muets : la
-  //    WebView Android expose `speechSynthesis` mais aucune voix. On n'installe
-  //    le pilote qu'une fois une voix anglaise confirmée sur l'appareil.
-  void probeNativeVoice().then((ok) => {
-    if (ok) setVoiceDriver(nativeVoiceDriver);
-  });
+  //    WebView Android expose `speechSynthesis` mais aucune voix. Le pilote est
+  //    installé immédiatement, sans attendre la sonde : le moteur du système
+  //    met parfois plusieurs secondes à se lier, et l'alternative est un pilote
+  //    dont on sait qu'il ne produit aucun son. La sonde, elle, tourne en
+  //    arrière-plan pour choisir la meilleure variante d'anglais.
+  if (installNativeVoice()) setVoiceDriver(nativeVoiceDriver);
 
   // 4. Habillage système et cycle de vie.
   void setupStatusBar();

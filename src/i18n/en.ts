@@ -164,6 +164,16 @@ export const en: DeepPartial<Dictionary> = {
       medium: 'Medium',
       strong: 'Strong',
       testHaptics: 'Test vibration',
+      voice: 'Listening exercise voice',
+      voiceNative: 'System speech engine ({lang}).',
+      voiceWeb: 'Browser voice.',
+      voiceProbing: 'Looking for the phone’s speech engine…',
+      voiceNone:
+        'No English voice is installed on this device: listening exercises stay silent until one is.',
+      voiceTest: 'Play a sample',
+      voiceInstall: 'Install an English voice',
+      voiceInstallHint:
+        'Opens the Android text-to-speech settings: choose “Install voice data”, then English.',
     },
   },
 

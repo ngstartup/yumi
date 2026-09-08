@@ -26,6 +26,9 @@ export default defineConfig(({ mode }) => ({
     outDir: mode === 'single' ? 'dist-single' : 'dist',
     target: 'es2020',
     cssCodeSplit: mode !== 'single',
+    // La démo mono-fichier n'a pas de second fichier où poser les polices :
+    // elles y sont embarquées en base64. La build normale les sert à part.
+    assetsInlineLimit: mode === 'single' ? 100_000_000 : 4096,
     chunkSizeWarningLimit: 1200,
     // La démo mono-fichier ne peut pas charger de chunk séparé : on aplatit.
     rollupOptions: mode === 'single' ? { output: { inlineDynamicImports: true } } : {},

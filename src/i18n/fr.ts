@@ -298,6 +298,15 @@ export const fr = {
       medium: 'Moyenne',
       strong: 'Forte',
       testHaptics: 'Tester la vibration',
+      voice: "Voix des exercices d'écoute",
+      voiceNative: 'Moteur vocal du téléphone ({lang}).',
+      voiceWeb: 'Voix du navigateur.',
+      voiceProbing: 'Recherche du moteur vocal du téléphone…',
+      voiceNone: "Aucune voix anglaise n'est installée sur cet appareil : les exercices d'écoute restent muets tant qu'elle manque.",
+      voiceTest: 'Écouter un exemple',
+      voiceInstall: 'Installer une voix anglaise',
+      voiceInstallHint:
+        "Ouvre les réglages Android de la synthèse vocale : choisissez « Installer les données vocales », puis l'anglais.",
     },
     update: {
       title: 'Version et mises à jour',

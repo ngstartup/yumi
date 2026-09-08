@@ -1,0 +1,66 @@
+/**
+ * Polices embarquées — sous-ensemble latin, woff2 uniquement.
+ *
+ * Elles étaient chargées depuis Google Fonts par un `@import` distant : une
+ * requête réseau qui bloque le premier rendu à *chaque* lancement, y compris
+ * dans l'application installée. Sur un réseau lent, l'écran reste blanc le
+ * temps qu'elle aboutisse ou expire ; hors connexion, la typographie tombe
+ * silencieusement sur celle du système — alors que Yumi se veut pleinement
+ * utilisable hors ligne.
+ *
+ * Les fichiers viennent maintenant de la build (@fontsource, ~144 Ko pour sept
+ * graisses). Le format `woff` de repli est volontairement omis : aucune WebView
+ * Android ni aucun navigateur visé ne l'exige, et il aurait doublé le poids
+ * téléchargé à chaque mise à jour à distance.
+ */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('@fontsource/inter/files/inter-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('@fontsource/inter/files/inter-latin-500-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('@fontsource/inter/files/inter-latin-600-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('@fontsource/inter/files/inter-latin-700-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('@fontsource/sora/files/sora-latin-600-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('@fontsource/sora/files/sora-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('@fontsource/sora/files/sora-latin-800-normal.woff2') format('woff2');
+}

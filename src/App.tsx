@@ -57,6 +57,23 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   return children;
 }
 
+/**
+ * Écran d'entrée.
+ *
+ * La page vitrine s'adresse à quelqu'un qui ne connaît pas Yumi. Un apprenant
+ * déjà inscrit qui rouvre l'application n'a rien à y faire : il y voyait
+ * « Se connecter » alors que sa session était intacte, et devait passer par le
+ * bouton « J'ai un compte » pour rejoindre son tableau de bord. On attend donc
+ * la restauration de la session avant de décider — quelques dizaines de
+ * millisecondes, derrière le même écran de lancement que le reste.
+ */
+function RootRoute() {
+  const status = useApp((s) => s.status);
+  if (status === 'loading') return <Splash />;
+  if (status === 'authenticated') return <Navigate to="/app" replace />;
+  return <LandingPage />;
+}
+
 function PublicOnly({ children }: { children: JSX.Element }) {
   const status = useApp((s) => s.status);
   if (status === 'loading') return <Splash />;
@@ -116,7 +133,7 @@ export default function App() {
             <ConnectivityWatcher />
             <Suspense fallback={<Splash />}>
               <Routes>
-                <Route path="/" element={<LandingPage />} />
+                <Route path="/" element={<RootRoute />} />
                 <Route
                   path="/signin"
                   element={

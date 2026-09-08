@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap');
+/* Polices embarquées (voir src/fonts.css) : plus aucune requête vers Google
+   Fonts au lancement, et une typographie correcte hors connexion. */
+@import './fonts.css';
 
 @tailwind base;
 @tailwind components;
@@ -23,6 +25,25 @@
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
+  }
+
+  /* Réactivité au doigt.
+     `touch-action: manipulation` retire la reconnaissance du double-appui pour
+     zoomer : sans elle, la WebView Android retient chaque appui ~300 ms au cas
+     où un second suivrait. Sur l'enchaînement d'exercices, cette attente donne
+     l'impression que le bouton « Continuer » ne répond pas, et l'apprenant
+     appuie plusieurs fois — ce qui relance le compteur à chaque appui. */
+  button,
+  a,
+  label,
+  summary,
+  input,
+  select,
+  textarea,
+  [role='button'],
+  [role='tab'] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {

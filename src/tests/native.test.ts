@@ -12,6 +12,7 @@ import {
 import {
   recognitionAvailable,
   listenOnce,
+  onVoiceChange,
   setSpeechProvider,
   setVoiceDriver,
   speak,
@@ -23,6 +24,7 @@ import {
   type SpeechProvider,
 } from '@/lib/tts';
 import { isNative, platform } from '@/native/platform';
+import { installNativeVoice, nativeVoiceStatus } from '@/native/voice';
 import { checkForUpdate, compareVersions, updatesSupported } from '@/native/updates';
 
 /** Pilote de test : enregistre les motifs reçus au lieu de faire vibrer. */
@@ -265,5 +267,27 @@ describe('pilote de synthèse vocale', () => {
     setVoiceDriver(null);
     expect(voiceDriverId()).toBe('web');
     expect(speechAvailable()).toBe(false);
+  });
+
+  it('prévient ses abonnés du changement de moteur, et cesse après désabonnement', () => {
+    // Le moteur du système met parfois plusieurs secondes à se lier : l'écran
+    // de diagnostic doit apprendre son arrivée sans interroger en boucle.
+    let seen = 0;
+    const off = onVoiceChange(() => {
+      seen += 1;
+    });
+    setVoiceDriver({ id: 'native', available: () => true, speak: () => undefined, stop: () => undefined });
+    expect(seen).toBe(1);
+    off();
+    setVoiceDriver(null);
+    expect(seen).toBe(1);
+  });
+
+  it("n'installe rien hors application empaquetée", () => {
+    // Sur le web, `speechSynthesis` fait très bien le travail : la couche
+    // native doit rester complètement inerte, sonde comprise.
+    expect(installNativeVoice()).toBe(false);
+    expect(nativeVoiceStatus().status).toBe('unsupported');
+    expect(voiceDriverId()).toBe('web');
   });
 });

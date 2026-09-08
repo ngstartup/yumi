@@ -105,9 +105,26 @@ try {
   let sawCorrect = false;
   let sawIncorrect = false;
   let shotFeedback = false;
+  let sawCorrectionRound = false;
 
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 40; i++) {
     if (await page.getByText(/Leçon terminée/).first().isVisible().catch(() => false)) break;
+
+    // Reprise des erreurs : elle s'intercale entre la dernière réponse et le
+    // résultat. On la joue réellement — c'est le seul moyen de vérifier que la
+    // manche de correction se termine bien sur l'écran de fin.
+    const correctionStart = page.getByRole('button', { name: /^Corriger mes erreurs$/ });
+    if (await correctionStart.isVisible().catch(() => false)) {
+      if (!sawCorrectionRound) {
+        sawCorrectionRound = true;
+        await page.screenshot({ path: 'screenshots/06b-correction.png', fullPage: true });
+        await correctionStart.click();
+      } else {
+        await page.getByRole('button', { name: /^Passer et voir mon résultat$/ }).click();
+      }
+      await page.waitForTimeout(150);
+      continue;
+    }
 
     const check = page.getByRole('button', { name: /^Vérifier$/ });
     await check.waitFor({ timeout: 8000 }).catch(() => {});
@@ -144,6 +161,7 @@ try {
 
   if (answered < 3) throw new Error(`seulement ${answered} exercices traités`);
   ok(`${answered} exercices enchaînés dans le lecteur de leçon`);
+  if (sawCorrectionRound) ok('Reprise des erreurs jouée avant l’affichage du résultat');
   if (sawCorrect || sawIncorrect) ok('Feedback pédagogique affiché (bonne réponse + explication)');
   else fail('Feedback pédagogique', 'aucun panneau de feedback détecté');
 
@@ -169,6 +187,21 @@ try {
     .evaluate((el) => el.parentElement?.textContent ?? '')
     .catch(() => '');
   ok(`Session et progression restaurées après rechargement ${xpValue ? `(${xpValue.trim()})` : ''}`);
+
+  // 8 bis. Retour à la racine avec une session ouverte ----------------------
+  // C'est l'écran que voit un apprenant qui rouvre l'application : il doit
+  // retomber sur son tableau de bord, pas sur la page vitrine avec son bouton
+  // « Se connecter ».
+  await page.goto(`${base}/#/`, { waitUntil: 'networkidle' });
+  await page
+    .waitForFunction(() => window.location.hash.startsWith('#/app'), null, { timeout: 10000 })
+    .catch(() => {});
+  const backHome = page.url();
+  if (!backHome.includes('#/app')) {
+    fail('Réouverture', `la racine mène à ${backHome} au lieu du tableau de bord`);
+  } else {
+    ok('Réouverture avec session ouverte : tableau de bord, pas la page vitrine');
+  }
 
   // 9. Parcours + unité -----------------------------------------------------
   await page.goto(`${base}/#/app/learn`, { waitUntil: 'networkidle' });

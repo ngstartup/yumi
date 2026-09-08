@@ -69,9 +69,30 @@ export const webVoiceDriver: VoiceDriver = {
 
 let voiceDriver: VoiceDriver = webVoiceDriver;
 
+/** Abonnés prévenus quand le moteur vocal change ou finit de s'initialiser.
+ *  Le moteur du système peut mettre plusieurs secondes à se lier : sans ce
+ *  signal, l'écran de diagnostic afficherait indéfiniment son état de départ. */
+const voiceListeners = new Set<() => void>();
+
+export function onVoiceChange(listener: () => void): () => void {
+  voiceListeners.add(listener);
+  return () => voiceListeners.delete(listener);
+}
+
+export function notifyVoiceChange(): void {
+  for (const listener of voiceListeners) {
+    try {
+      listener();
+    } catch {
+      /* un abonné fautif n'empêche pas les autres d'être prévenus */
+    }
+  }
+}
+
 /** Installe un pilote (appelé par la couche native). `null` revient au web. */
 export function setVoiceDriver(next: VoiceDriver | null): void {
   voiceDriver = next ?? webVoiceDriver;
+  notifyVoiceChange();
 }
 
 /** Pilote actif — utile aux réglages et au diagnostic. */

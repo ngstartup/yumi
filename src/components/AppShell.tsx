@@ -32,7 +32,7 @@ export function AppShell() {
       </a>
 
       {/* Barre supérieure — desktop */}
-      <header className="sticky top-0 z-40 hidden border-b border-surface-sunk bg-white/85 backdrop-blur sm:block">
+      <header className="sticky top-0 z-40 hidden border-b border-surface-sunk bg-white sm:block">
         <div className="mx-auto flex h-16 max-w-5xl items-center gap-6 px-6">
           <NavLink to="/app" className="flex items-center gap-2" aria-label="Yumi — accueil">
             <Fox size={34} stage={stage} expression="happy" />
@@ -86,7 +86,7 @@ export function AppShell() {
       <nav
         aria-label="Navigation principale"
         data-bottom-nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-surface-sunk bg-white/95 pb-[var(--safe-bottom)] backdrop-blur sm:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-surface-sunk bg-white pb-[var(--safe-bottom)] sm:hidden"
       >
         <div className="flex">
           {TABS.map(({ to, end, key, Icon }) => (
