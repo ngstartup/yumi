@@ -28,7 +28,7 @@ Autres commandes :
 | `npm run mobile:android` | Application Android : build, synchronisation, ouverture d'Android Studio |
 | `npm run bundle` | Fabrique le paquet de mise à jour à distance et son manifeste |
 | `npm run icons` | Régénère icônes et image de partage depuis le renard Yumi |
-| `python3 scripts/make-audio.py --voice <modèle.onnx>` | Réenregistre la voix des exercices d'écoute |
+| `python3 scripts/make-audio.py --model-dir <kokoro-multi-lang-v1_0>` | Réenregistre la voix des exercices d'écoute |
 
 L'application Android et son pipeline de mise à jour sont documentés dans **[ANDROID.md](ANDROID.md)**.
 
@@ -151,8 +151,18 @@ différente à chaque appareil.
 
 `scripts/make-audio.py` fait l'inventaire de tout ce que le moteur peut donner à
 prononcer — les champs anglais du contenu et la banque de placement, 722 énoncés — puis
-les enregistre avec Piper (voix `en_GB-cori-high`), rogne les silences, normalise le
-niveau et encode en Opus 24 kb/s : environ 4 Mo pour l'ensemble. Le nom du fichier est
+les enregistre avec Kokoro (`kokoro-multi-lang-v1_0`, voix `bf_emma`, féminine
+britannique), rogne les silences, normalise le niveau et encode en Opus 24 kb/s : environ
+3 Mo pour l'ensemble.
+
+Deux choix qui ne sont pas techniques. Le modèle d'abord : les synthèses mono-voix de
+type VITS sonnent « robot » au bout de trois écoutes, et un apprenant entend cette voix
+des dizaines de fois par leçon. Le débit ensuite : les enregistrements sont faits à 0,85
+du débit naturel. Un débutant n'entend pas les mots dans une phrase dite à pleine vitesse
+— il entend un bloc. Descendre plus bas, en revanche, déforme l'intonation et apprend une
+musique de la langue qui n'existe pas.
+
+Le nom du fichier est
 calculé à partir du texte lui-même (`clipId`, écrit à l'identique en Python et en
 TypeScript), si bien qu'ajouter une phrase au contenu et relancer le script suffit — rien
 à renommer, rien à référencer à la main. Un test refuse d'ailleurs tout énoncé du contenu
@@ -162,7 +172,11 @@ qui n'aurait pas son enregistrement, et tout enregistrement devenu orphelin.
 l'enregistrement embarqué, puis le moteur vocal du système, puis celui du navigateur. Les
 deux derniers ne servent plus qu'aux textes ajoutés après la dernière génération. Le
 bouton « écouter lentement » des dictées ne change pas de fichier : il joue le même à
-vitesse réduite, sans monter dans les aigus (`preservesPitch`).
+vitesse réduite, sans monter dans les aigus (`preservesPitch`) — et sans suivre la demande
+au pied de la lettre, puisque l'enregistrement est déjà ralenti. **Profil → Son et
+vibrations** expose enfin une vitesse de voix (lente / normale / rapide) : le débit gravé
+dans les fichiers reste le repère, chacun l'ajuste à son oreille sans qu'on réenregistre
+quoi que ce soit.
 
 **Profil → Son et vibrations** affiche ce qui parle réellement, avec un bouton d'essai —
 et, si l'on en était réduit au moteur du système sans voix anglaise, un raccourci vers
@@ -258,7 +272,7 @@ Aucune clé secrète ne doit être commitée. En local-first, aucune variable n'
 
 ## Tests
 
-- **Unitaires** (`npm test`) — 69 tests : correction des 11 types d'exercices, enchaînement
+- **Unitaires** (`npm test`) — 73 tests : correction des 11 types d'exercices, enchaînement
   des leçons après « Continuer », couverture audio du contenu (tout énoncé prononçable a
   son enregistrement, et réciproquement) et concordance des trois implémentations de
   `clipId`, pilote de synthèse vocale injectable et notification de ses abonnés quand le

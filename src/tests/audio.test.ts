@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CLIP_IDS } from '@/audio/clips';
-import { clipId } from '@/lib/audioClips';
+import { clipId, VOICE_PACE_RATES } from '@/lib/audioClips';
+import { defaultSettings, normalizeSettings } from '@/data/schema';
 import { allLessons } from '@/content';
 import { PLACEMENT_BANK } from '@/content/placement';
 
@@ -68,5 +69,28 @@ describe('couverture audio du contenu', () => {
   it('a des identifiants bien formés', () => {
     expect(CLIP_IDS.size).toBeGreaterThan(400);
     for (const id of CLIP_IDS) expect(id).toMatch(/^[0-9a-f]{16}$/);
+  });
+});
+
+describe('vitesse de la voix', () => {
+  it('démarre au débit tel qu’enregistré', () => {
+    // Les fichiers sont déjà produits à un débit de débutant : « normal » ne
+    // doit donc rien changer, sinon le réglage corrigerait deux fois.
+    expect(defaultSettings('u1').voicePace).toBe('normal');
+    expect(VOICE_PACE_RATES.normal).toBe(1);
+  });
+
+  it('encadre le réglage de part et d’autre', () => {
+    expect(VOICE_PACE_RATES.slow).toBeLessThan(1);
+    expect(VOICE_PACE_RATES.brisk).toBeGreaterThan(1);
+  });
+
+  it('ignore une valeur enregistrée qui ne veut rien dire', () => {
+    const s = normalizeSettings('u1', { voicePace: 'turbo' } as never);
+    expect(s.voicePace).toBe('normal');
+  });
+
+  it('conserve le choix de l’apprenant', () => {
+    expect(normalizeSettings('u1', { voicePace: 'slow' }).voicePace).toBe('slow');
   });
 });

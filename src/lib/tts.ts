@@ -4,9 +4,9 @@
  *
  *    1. **Un enregistrement embarqué** (`src/lib/audioClips.ts`). C'est la voie
  *       normale : les 722 énoncés du contenu sont enregistrés une fois pour
- *       toutes et livrés avec l'application. Ils se jouent partout, hors
- *       connexion, avec la même prononciation de référence sur tous les
- *       appareils.
+ *       toutes — voix féminine britannique, débit ralenti pour un débutant — et
+ *       livrés avec l'application. Ils se jouent partout, hors connexion, avec
+ *       la même prononciation de référence sur tous les appareils.
  *    2. `nativeVoiceDriver` — le moteur vocal du système, installé par
  *       l'empaquetage mobile (`src/native/voice.ts`).
  *    3. `webVoiceDriver` — `window.speechSynthesis`, parfait dans un navigateur.

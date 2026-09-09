@@ -10,11 +10,17 @@ sans le moindre message. Un enregistrement, lui, se joue partout, hors
 connexion, et toujours avec la même voix : c'est aussi meilleur
 pédagogiquement, l'apprenant reconnaît une prononciation de référence.
 
+La voix vient de Kokoro (modèle `kokoro-multi-lang-v1_0` servi par
+sherpa-onnx) : le rendu est nettement moins « robot » que celui des modèles
+VITS mono-voix, ce qui compte quand l'apprenant écoute la même voix des
+dizaines de fois. Le débit est volontairement en dessous du naturel — un
+débutant n'entend pas les mots dans une phrase dite à pleine vitesse.
+
 Le script est reproductible : mêmes textes, même voix, mêmes fichiers.
 
-    python3 scripts/make-audio.py --voice /chemin/en_GB-cori-high.onnx
+    python3 scripts/make-audio.py --model-dir /chemin/kokoro-multi-lang-v1_0
 
-Il produit `public/audio/<id>.mp3` et l'index `src/audio/clips.ts`.
+Il produit `public/audio/<id>.ogg` et l'index `src/audio/clips.ts`.
 L'identifiant vient du texte lui-même (voir `clipId`, dupliqué à l'identique
 dans `src/lib/audioClips.ts`) : ajouter une phrase au contenu et relancer le
 script suffit, rien n'est à renommer à la main.
@@ -42,10 +48,20 @@ INDEX_FILE = ROOT / "src" / "audio" / "clips.ts"
 # Opus tient cette finesse à 24 kb/s là où il en faudrait plus du double en
 # MP3 : les 722 extraits tiennent ainsi dans quelques mégaoctets, ce qui
 # compte pour une mise à jour à distance payée en données mobiles.
+# Voix et débit. `bf_emma` est une voix féminine britannique — la prononciation
+# de référence de la charte — et 0,85 la place un cran sous le débit naturel :
+# assez lent pour qu'un débutant sépare les mots, assez proche du naturel pour
+# ne pas déformer l'intonation. Le bouton « écouter lentement » des dictées
+# descend encore, à la lecture.
+DEFAULT_SPEAKER = 21
+DEFAULT_SPEED = 0.85
+
 BITRATE = "24k"
 CONTAINER = "ogg"
 
-_voice = None
+_tts = None
+_sid = 21
+_speed = 0.85
 
 
 def normalize(text: str) -> str:
@@ -64,34 +80,59 @@ def clip_id(text: str) -> str:
     return f"{h1:08x}{h2:08x}"
 
 
-def _init(model: str, config: str, length_scale: float) -> None:
-    global _voice, _length_scale
-    from piper import PiperVoice
+def _init(model_dir: str, sid: int, speed: float) -> None:
+    global _tts, _sid, _speed
+    import sherpa_onnx
 
-    _voice = PiperVoice.load(model, config_path=config)
-    _length_scale = length_scale
+    _sid, _speed = sid, speed
+    _tts = sherpa_onnx.OfflineTts(
+        sherpa_onnx.OfflineTtsConfig(
+            model=sherpa_onnx.OfflineTtsModelConfig(
+                kokoro=sherpa_onnx.OfflineTtsKokoroModelConfig(
+                    model=f"{model_dir}/model.onnx",
+                    voices=f"{model_dir}/voices.bin",
+                    tokens=f"{model_dir}/tokens.txt",
+                    data_dir=f"{model_dir}/espeak-ng-data",
+                    dict_dir=f"{model_dir}/dict",
+                    # Lexique britannique : c'est la prononciation de référence
+                    # de la charte pédagogique.
+                    lexicon=f"{model_dir}/lexicon-gb-en.txt,{model_dir}/lexicon-zh.txt",
+                ),
+                provider="cpu",
+                num_threads=1,
+            ),
+            max_num_sentences=1,
+        )
+    )
 
 
 def _render(job: tuple[str, str]) -> tuple[str, int]:
     """Synthétise puis encode un extrait. Renvoie (id, octets)."""
-    from piper import SynthesisConfig
+    import array
 
     text, cid = job
     out = AUDIO_DIR / f"{cid}.{CONTAINER}"
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
         raw = tmp.name
     try:
+        audio = _tts.generate(text, sid=_sid, speed=_speed)
+        pcm = array.array(
+            "h", (int(max(-1.0, min(1.0, s)) * 32767) for s in audio.samples)
+        )
         with wave.open(raw, "wb") as w:
-            _voice.synthesize_wav(text, w, SynthesisConfig(length_scale=_length_scale))
+            w.setnchannels(1)
+            w.setsampwidth(2)
+            w.setframerate(audio.sample_rate)
+            w.writeframes(pcm.tobytes())
         subprocess.run(
             [
                 "ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", raw,
                 # Piper laisse un silence en tête et en queue : on le rogne, sinon
                 # chaque écoute commence par un temps mort.
                 "-af",
-                "silenceremove=start_periods=1:start_silence=0.03:start_threshold=-45dB,"
+                "silenceremove=start_periods=1:start_silence=0.04:start_threshold=-45dB,"
                 "areverse,"
-                "silenceremove=start_periods=1:start_silence=0.06:start_threshold=-45dB,"
+                "silenceremove=start_periods=1:start_silence=0.10:start_threshold=-45dB,"
                 "areverse,"
                 "loudnorm=I=-16:TP=-1.5:LRA=11",
                 "-ac", "1", "-codec:a", "libopus", "-b:a", BITRATE,
@@ -121,17 +162,19 @@ def collect_strings() -> list[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--voice", required=True, help="chemin du modèle .onnx Piper")
-    ap.add_argument("--length-scale", type=float, default=1.05,
-                    help="1.0 = débit naturel ; au-dessus, plus lent")
+    ap.add_argument("--model-dir", required=True,
+                    help="dossier du modèle kokoro-multi-lang-v1_0")
+    ap.add_argument("--speaker", type=int, default=DEFAULT_SPEAKER,
+                    help=f"identifiant de voix Kokoro (défaut {DEFAULT_SPEAKER} = bf_emma)")
+    ap.add_argument("--speed", type=float, default=DEFAULT_SPEED,
+                    help="1.0 = débit naturel ; en dessous, plus lent")
     ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2)))
     ap.add_argument("--clean", action="store_true", help="repart d'un dossier vide")
     args = ap.parse_args()
 
-    model = Path(args.voice)
-    config = Path(str(model) + ".json")
-    if not model.exists() or not config.exists():
-        print(f"modèle introuvable : {model}", file=sys.stderr)
+    model = Path(args.model_dir)
+    if not (model / "model.onnx").exists():
+        print(f"modèle introuvable : {model}/model.onnx", file=sys.stderr)
         return 1
     if shutil.which("ffmpeg") is None:
         print("ffmpeg est requis", file=sys.stderr)
@@ -160,7 +203,7 @@ def main() -> int:
         with ProcessPoolExecutor(
             max_workers=args.jobs,
             initializer=_init,
-            initargs=(str(model), str(config), args.length_scale),
+            initargs=(str(model), args.speaker, args.speed),
         ) as pool:
             for cid, size in pool.map(_render, todo, chunksize=4):
                 done += 1

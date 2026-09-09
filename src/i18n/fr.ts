@@ -305,6 +305,10 @@ export const fr = {
       voiceNone: "Aucune voix anglaise n'est installée sur cet appareil : les exercices d'écoute restent muets tant qu'elle manque.",
       voiceRecorded:
         "Voix enregistrée, livrée avec l'application : les exercices d'écoute fonctionnent hors connexion, sur tous les téléphones.",
+      voicePace: 'Vitesse de la voix',
+      voiceSlow: 'Lente',
+      voiceNormal: 'Normale',
+      voiceBrisk: 'Rapide',
       voiceTest: 'Écouter un exemple',
       voiceInstall: 'Installer une voix anglaise',
       voiceInstallHint:

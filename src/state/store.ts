@@ -22,6 +22,7 @@ import type { Exercise } from '@/engine/types';
 import { localAuth } from '@/auth/localAuth';
 import { certificateId, randomId } from '@/lib/crypto';
 import { configureFeedback, DEFAULT_FEEDBACK } from '@/lib/feedback';
+import { setVoicePace, VOICE_PACE_RATES } from '@/lib/audioClips';
 import { track } from '@/lib/analytics';
 
 export interface SessionOutcome {
@@ -598,6 +599,7 @@ function applyFeedbackSettings(settings: SettingsRecord) {
     haptics: settings.hapticsEnabled,
     intensity: settings.hapticsIntensity,
   });
+  setVoicePace(VOICE_PACE_RATES[settings.voicePace] ?? 1);
 }
 
 function longestStreak(values: boolean[]): number {

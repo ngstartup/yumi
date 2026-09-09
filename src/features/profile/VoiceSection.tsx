@@ -10,10 +10,12 @@
 
 import { useEffect, useState } from 'react';
 import { useT } from '@/i18n';
-import { Button } from '@/ds';
+import { Button, SegmentedControl } from '@/ds';
 import { onVoiceChange, speak, speechAvailable, voiceDriverId } from '@/lib/tts';
 import { clipsAvailable, hasClip } from '@/lib/audioClips';
 import { isNative, nativeVoiceStatus, openVoiceInstall } from '@/native';
+import { useApp } from '@/state/store';
+import type { VoicePace } from '@/data/schema';
 
 /** Phrase de test : elle fait partie du contenu, donc elle est enregistrée.
  *  Le bouton éprouve ainsi le chemin réellement emprunté par les exercices. */
@@ -22,6 +24,8 @@ const SAMPLE = 'My brother lives in London.';
 export function VoiceSection() {
   const t = useT();
   const [, bump] = useState(0);
+  const settings = useApp((st) => st.settings);
+  const updateSettings = useApp((st) => st.updateSettings);
 
   // Le moteur du système met parfois plusieurs secondes à se lier : sans cet
   // abonnement, l'écran resterait figé sur « recherche en cours ».
@@ -50,6 +54,31 @@ export function VoiceSection() {
     <div className="border-t border-surface-sunk pt-3">
       <p className="text-sm font-semibold text-ink">{t('profile.feedback.voice')}</p>
       <p className="mt-1 text-sm leading-relaxed text-ink-muted">{description}</p>
+
+      {/* Vitesse. Les enregistrements sont déjà à un débit de débutant ; ce
+          réglage laisse chacun l'ajuster à son oreille, sans réenregistrer. */}
+      {recorded && settings && (
+        <div className="mt-3">
+          <p className="mb-2 text-sm font-semibold text-ink-soft">
+            {t('profile.feedback.voicePace')}
+          </p>
+          <SegmentedControl<VoicePace>
+            label={t('profile.feedback.voicePace')}
+            value={settings.voicePace}
+            onChange={(v) => {
+              void updateSettings({ voicePace: v });
+              // On l'entend tout de suite : un réglage de vitesse qui ne se
+              // juge qu'à la prochaine leçon ne se règle jamais.
+              window.setTimeout(() => speak(SAMPLE), 60);
+            }}
+            options={[
+              { value: 'slow', label: t('profile.feedback.voiceSlow') },
+              { value: 'normal', label: t('profile.feedback.voiceNormal') },
+              { value: 'brisk', label: t('profile.feedback.voiceBrisk') },
+            ]}
+          />
+        </div>
+      )}
 
       <div className="mt-3 flex flex-wrap gap-2">
         <Button

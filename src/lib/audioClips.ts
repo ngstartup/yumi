@@ -25,6 +25,30 @@ import { CLIP_IDS } from '@/audio/clips';
 const NATURAL_RATE = 0.95;
 
 /**
+ * Amortissement du ralenti.
+ *
+ * Les enregistrements sont déjà faits en dessous du débit naturel, pour un
+ * débutant. Appliquer par-dessus, au pied de la lettre, le ralenti demandé par
+ * l'écran de dictée donnerait une voix traînante — on suivrait deux fois la
+ * même intention. On ne garde donc qu'une part de l'écart demandé.
+ */
+function playbackRateFor(rate: number | undefined): number {
+  const asked = (rate ?? NATURAL_RATE) / NATURAL_RATE;
+  const damped = Math.min(1.15, Math.max(0.72, 1 - (1 - asked) * 0.6));
+  return Math.min(1.5, Math.max(0.6, damped * pace));
+}
+
+/** Préférence de l'apprenant, appliquée par-dessus le débit de référence.
+ *  1 = tel qu'enregistré. Voir `VoicePace` dans le schéma des réglages. */
+let pace = 1;
+
+export const VOICE_PACE_RATES = { slow: 0.82, normal: 1, brisk: 1.15 } as const;
+
+export function setVoicePace(next: number): void {
+  pace = Number.isFinite(next) && next > 0 ? next : 1;
+}
+
+/**
  * Identifiant d'un texte : FNV-1a puis djb2 sur les unités de code UTF-16.
  * Le même calcul, à l'octet près, se trouve dans `scripts/make-audio.py` —
  * c'est ce qui permet de retrouver le fichier sans embarquer la table des
@@ -98,8 +122,7 @@ export function playClip(
     const el = audio as HTMLAudioElement & { preservesPitch?: boolean; mozPreservesPitch?: boolean };
     el.preservesPitch = true;
     el.mozPreservesPitch = true;
-    const ratio = (options.rate ?? NATURAL_RATE) / NATURAL_RATE;
-    audio.playbackRate = Math.min(1.5, Math.max(0.5, ratio));
+    audio.playbackRate = playbackRateFor(options.rate);
     audio.onended = () => {
       if (current === audio) current = null;
     };

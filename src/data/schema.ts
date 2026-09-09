@@ -34,6 +34,11 @@ export interface ProfileRecord {
   updatedAt: number;
 }
 
+/** Les enregistrements sont déjà faits à un débit de débutant ; ce réglage
+ *  laisse l'apprenant l'ajuster à son oreille, sans réenregistrer quoi que ce
+ *  soit. `normal` est ce débit de référence. */
+export type VoicePace = 'slow' | 'normal' | 'brisk';
+
 export interface SettingsRecord {
   userId: string;
   notificationsEnabled: boolean;
@@ -45,6 +50,8 @@ export interface SettingsRecord {
   /** Vibrations sur les interactions et les récompenses. */
   hapticsEnabled: boolean;
   hapticsIntensity: HapticIntensity;
+  /** Vitesse de lecture des énoncés anglais des exercices d'écoute. */
+  voicePace: VoicePace;
   analyticsOptIn: boolean;
   updatedAt: number;
 }
@@ -60,6 +67,7 @@ export function defaultSettings(userId: string): SettingsRecord {
     soundVolume: DEFAULT_FEEDBACK.volume,
     hapticsEnabled: DEFAULT_FEEDBACK.haptics,
     hapticsIntensity: DEFAULT_FEEDBACK.intensity,
+    voicePace: 'normal',
     analyticsOptIn: false,
     updatedAt: Date.now(),
   };
@@ -86,6 +94,9 @@ export function normalizeSettings(
     )
       ? (stored.hapticsIntensity as HapticIntensity)
       : base.hapticsIntensity,
+    voicePace: (['slow', 'normal', 'brisk'] as const).includes(stored.voicePace as VoicePace)
+      ? (stored.voicePace as VoicePace)
+      : base.voicePace,
   };
 }
 
