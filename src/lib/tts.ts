@@ -1,18 +1,24 @@
-/** Synthèse et reconnaissance vocales.
+/** Voix des exercices d'écoute, et reconnaissance vocale.
  *
- *  L'audio des exercices d'écoute est synthétisé à la volée : aucun fichier son
- *  à télécharger, donc un fonctionnement hors connexion réel et une application
- *  légère.
+ *  Trois moyens de faire entendre l'anglais, essayés dans cet ordre :
  *
- *  Deux moteurs derrière une même interface, comme pour la reconnaissance :
- *    • `webVoiceDriver` — `window.speechSynthesis`, parfait dans un navigateur ;
- *    • le pilote natif installé par l'empaquetage mobile (`src/native/voice.ts`).
+ *    1. **Un enregistrement embarqué** (`src/lib/audioClips.ts`). C'est la voie
+ *       normale : les 722 énoncés du contenu sont enregistrés une fois pour
+ *       toutes et livrés avec l'application. Ils se jouent partout, hors
+ *       connexion, avec la même prononciation de référence sur tous les
+ *       appareils.
+ *    2. `nativeVoiceDriver` — le moteur vocal du système, installé par
+ *       l'empaquetage mobile (`src/native/voice.ts`).
+ *    3. `webVoiceDriver` — `window.speechSynthesis`, parfait dans un navigateur.
  *
- *  Cette séparation n'est pas décorative. Dans une WebView Android,
- *  `speechSynthesis` **existe mais ne dispose d'aucune voix** : l'API répond
- *  présente, `speak()` ne produit aucun son, et les exercices d'écoute
- *  deviennent muets sans qu'aucune erreur ne soit levée. Seul le moteur vocal
- *  du système parle réellement sur un téléphone. */
+ *  Cet ordre vient de l'expérience, pas de la théorie. Dans une WebView
+ *  Android, `speechSynthesis` **existe mais ne dispose d'aucune voix** : l'API
+ *  répond présente, `speak()` ne produit aucun son, et l'exercice devient muet
+ *  sans qu'aucune erreur ne soit levée. Le moteur du système, lui, met un temps
+ *  variable à se lier et n'a pas forcément de voix anglaise installée. Aucun des
+ *  deux ne peut être tenu pour acquis ; un fichier, si. */
+
+import { clipsAvailable, playClip, stopClip } from './audioClips';
 
 export interface VoiceDriver {
   readonly id: 'web' | 'native';
@@ -100,16 +106,7 @@ export function voiceDriverId(): VoiceDriver['id'] {
   return voiceDriver.id;
 }
 
-export function speechAvailable(): boolean {
-  try {
-    return voiceDriver.available();
-  } catch {
-    return false;
-  }
-}
-
-export function speak(text: string, options: { rate?: number } = {}): void {
-  if (!text) return;
+function speakWithDriver(text: string, options: { rate?: number }): void {
   try {
     if (voiceDriver.available()) voiceDriver.speak(text, options);
   } catch {
@@ -117,7 +114,33 @@ export function speak(text: string, options: { rate?: number } = {}): void {
   }
 }
 
+/** Vrai dès qu'il existe un moyen de faire entendre l'anglais : un
+ *  enregistrement embarqué suffit, même sans moteur vocal sur l'appareil. */
+export function speechAvailable(): boolean {
+  if (clipsAvailable()) return true;
+  try {
+    return voiceDriver.available();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Fait entendre le texte. L'enregistrement embarqué passe en premier : il est
+ * disponible partout, hors connexion, et donne toujours la même prononciation
+ * de référence. La synthèse vocale de l'appareil reste le repli — pour un
+ * texte ajouté au contenu et pas encore enregistré, ou si le fichier ne peut
+ * pas être joué.
+ */
+export function speak(text: string, options: { rate?: number } = {}): void {
+  if (!text) return;
+  stopSpeaking();
+  if (playClip(text, options, () => speakWithDriver(text, options))) return;
+  speakWithDriver(text, options);
+}
+
 export function stopSpeaking(): void {
+  stopClip();
   try {
     voiceDriver.stop();
   } catch {

@@ -28,6 +28,7 @@ Autres commandes :
 | `npm run mobile:android` | Application Android : build, synchronisation, ouverture d'Android Studio |
 | `npm run bundle` | Fabrique le paquet de mise à jour à distance et son manifeste |
 | `npm run icons` | Régénère icônes et image de partage depuis le renard Yumi |
+| `python3 scripts/make-audio.py --voice <modèle.onnx>` | Réenregistre la voix des exercices d'écoute |
 
 L'application Android et son pipeline de mise à jour sont documentés dans **[ANDROID.md](ANDROID.md)**.
 
@@ -78,7 +79,8 @@ src/
   mascot/       Le renard Yumi : 6 évolutions × 11 expressions, 100 % SVG
   i18n/         Traductions et contexte de langue
   features/     Écrans, un dossier par domaine
-  lib/          Utilitaires (retour son/haptique, texte, aléatoire déterministe, TTS, crypto, analytics)
+  audio/        Index des extraits enregistrés — GÉNÉRÉ, ne pas éditer
+  lib/          Utilitaires (retour son/haptique, voix, texte, aléatoire déterministe, crypto, analytics)
 ```
 
 ### Le moteur pédagogique
@@ -130,6 +132,42 @@ Réglages exposés dans **Profil → Son et vibrations** : activation des sons, 
 de test pour chacun. Tout est persisté par utilisateur et re-appliqué au démarrage ; les
 options indisponibles sur l'appareil sont désactivées avec l'explication correspondante.
 
+### La voix des exercices d'écoute
+
+Elle est **enregistrée**, pas synthétisée sur l'appareil. C'est la seule façon d'obtenir
+du son partout.
+
+La démonstration est vite faite : dans une WebView Android, `window.speechSynthesis`
+existe mais n'a aucune voix — l'API répond, `speak()` ne lève rien, et il ne sort aucun
+son. Le moteur vocal du système, lui, s'atteint par un plugin natif, mais il met un temps
+variable à se lier (de 0,2 à plusieurs secondes après le lancement) et n'a pas forcément
+de voix anglaise installée : un téléphone vendu au Niger n'en a souvent aucune. Chacun de
+ces cas donne le même résultat pour l'apprenant — un exercice de compréhension orale
+silencieux, sans le moindre message d'erreur.
+
+Un fichier, lui, se joue partout, hors connexion, et toujours avec la même prononciation
+de référence. C'est aussi meilleur pédagogiquement : l'apprenant n'entend pas une voix
+différente à chaque appareil.
+
+`scripts/make-audio.py` fait l'inventaire de tout ce que le moteur peut donner à
+prononcer — les champs anglais du contenu et la banque de placement, 722 énoncés — puis
+les enregistre avec Piper (voix `en_GB-cori-high`), rogne les silences, normalise le
+niveau et encode en Opus 24 kb/s : environ 4 Mo pour l'ensemble. Le nom du fichier est
+calculé à partir du texte lui-même (`clipId`, écrit à l'identique en Python et en
+TypeScript), si bien qu'ajouter une phrase au contenu et relancer le script suffit — rien
+à renommer, rien à référencer à la main. Un test refuse d'ailleurs tout énoncé du contenu
+qui n'aurait pas son enregistrement, et tout enregistrement devenu orphelin.
+
+À l'exécution (`src/lib/tts.ts`), trois moyens sont essayés dans l'ordre :
+l'enregistrement embarqué, puis le moteur vocal du système, puis celui du navigateur. Les
+deux derniers ne servent plus qu'aux textes ajoutés après la dernière génération. Le
+bouton « écouter lentement » des dictées ne change pas de fichier : il joue le même à
+vitesse réduite, sans monter dans les aigus (`preservesPitch`).
+
+**Profil → Son et vibrations** affiche ce qui parle réellement, avec un bouton d'essai —
+et, si l'on en était réduit au moteur du système sans voix anglaise, un raccourci vers
+l'écran Android d'installation des données vocales.
+
 ### Répétition espacée
 
 Chaque notion (`conceptId`) porte une facilité, un intervalle et une date de prochaine
@@ -151,10 +189,9 @@ Passer au cloud = écrire l'adaptateur et changer l'aiguillage dans `src/data/in
 Aucun écran à modifier.
 
 Une file de synchronisation (`syncQueue`) enregistre les écritures ; elle est rejouée au
-retour de la connexion. L'audio des exercices d'écoute est produit par la synthèse vocale
-de l'appareil : aucun fichier son à télécharger, donc un vrai fonctionnement hors ligne.
-Les polices Inter et Sora sont embarquées dans la build (`src/fonts.css`, sous-ensemble
-latin, woff2 seul) : plus aucune requête réseau ne bloque le premier rendu au lancement.
+retour de la connexion. L'audio des exercices d'écoute et les polices Inter et Sora sont
+embarqués dans la build : plus aucune requête réseau au lancement, et une application
+identique avec ou sans connexion.
 
 ### Internationalisation
 
@@ -180,19 +217,8 @@ un navigateur. Elle traite trois points qu'une simple mise en coquille laisse ca
 - **Reconnaissance vocale.** La Web Speech API est absente d'iOS et dépend du réseau chez
   Chrome. `src/lib/tts.ts` définit une interface `SpeechProvider` ; le moteur du système
   remplace l'implémentation web au démarrage, sans qu'aucun écran change d'appel.
-- **Synthèse vocale.** Dans une WebView Android, `window.speechSynthesis` existe mais ne
-  dispose d'aucune voix : l'API répond présente, `speak()` ne produit aucun son, et les
-  exercices d'écoute deviennent muets sans la moindre erreur. `VoiceDriver` répond au même
-  principe que l'haptique : le moteur vocal du système remplace celui du navigateur au
-  démarrage. Le piège, lui, est ailleurs — le service vocal d'Android met un temps
-  variable à se lier (de 0,2 à plusieurs secondes) et, interrogé trop tôt, jure n'avoir
-  aucune langue. Le pilote est donc **installé sans attendre** (dans une application
-  empaquetée, le moteur système est le seul à pouvoir produire du son) tandis qu'une sonde
-  patiente réessaie en arrière-plan pour choisir la meilleure variante d'anglais, avec
-  repli sur `en-US` puis sur le pilote navigateur si l'appel échoue. **Profil → Son et
-  vibrations** affiche le moteur réellement actif et sa langue ; quand l'appareil n'a
-  aucune voix anglaise, un bouton ouvre l'écran Android d'installation des données
-  vocales.
+- **Voix des exercices d'écoute.** Voir la section dédiée ci-dessous : la synthèse vocale
+  d'un téléphone ne peut pas être tenue pour acquise, donc l'audio est enregistré.
 
 **Mise à jour à distance.** Modifier le code, pousser sur `main`, et la nouvelle version
 descend sur les téléphones au démarrage suivant — sans réinstaller l'APK. Le pipeline
@@ -232,9 +258,11 @@ Aucune clé secrète ne doit être commitée. En local-first, aucune variable n'
 
 ## Tests
 
-- **Unitaires** (`npm test`) — 63 tests : correction des 11 types d'exercices, enchaînement
-  des leçons après « Continuer », pilote de synthèse vocale injectable et notification de
-  ses abonnés quand le moteur du système se lie enfin, tolérance
+- **Unitaires** (`npm test`) — 69 tests : correction des 11 types d'exercices, enchaînement
+  des leçons après « Continuer », couverture audio du contenu (tout énoncé prononçable a
+  son enregistrement, et réciproquement) et concordance des trois implémentations de
+  `clipId`, pilote de synthèse vocale injectable et notification de ses abonnés quand le
+  moteur du système se lie enfin, tolérance
   aux fautes de frappe, répétition espacée, série quotidienne, XP, badges, sélection
   adaptative, test de placement, service de retour sensoriel (bornes de volume, mise à
   l'échelle des motifs haptiques, inertie hors navigateur, migration des anciens réglages),
@@ -244,7 +272,8 @@ Aucune clé secrète ne doit être commitée. En local-first, aucune variable n'
 - **Bout en bout** (`node scripts/smoke.mjs`) — rejoue le parcours complet dans un
   navigateur réel, y compris la manche de reprise des erreurs, vérifie la persistance après
   rechargement, le retour à la racine avec une session ouverte (tableau de bord et non page
-  vitrine), les réglages de son et de
+  vitrine), le décodage effectif d'un extrait d'écoute (durée réelle, pas seulement la
+  présence du fichier), les réglages de son et de
   vibrations (volume enregistré, curseur désactivé quand le son est coupé), l'absence de
   débordement horizontal en 390 px et la bannière hors connexion. Captures dans
   `screenshots/`.

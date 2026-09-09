@@ -21,6 +21,10 @@ const MIME = {
   '.svg': 'image/svg+xml',
   '.xml': 'application/xml',
   '.txt': 'text/plain',
+  '.ogg': 'audio/ogg',
+  '.mp3': 'audio/mpeg',
+  '.woff2': 'font/woff2',
+  '.png': 'image/png',
 };
 
 const server = http.createServer((req, res) => {
@@ -41,6 +45,24 @@ function fail(label, err) {
 }
 
 await new Promise((r) => server.listen(PORT, r));
+/** Phrase présente dans la banque de placement : elle est donc enregistrée. */
+const LISTENING_SAMPLE = 'My brother lives in London.';
+
+/** Même calcul que `src/lib/audioClips.ts` et `scripts/make-audio.py`. Le
+ *  redire ici n'est pas une redite inutile : si l'une des trois implémentations
+ *  dérive, ce test le voit avant l'apprenant. */
+function clipId(text) {
+  const s = text.replace(/\s+/g, ' ').trim();
+  let h1 = 0x811c9dc5;
+  let h2 = 5381;
+  for (let i = 0; i < s.length; i += 1) {
+    const c = s.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 16777619) >>> 0;
+    h2 = (Math.imul(h2, 33) ^ c) >>> 0;
+  }
+  return h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0');
+}
+
 const base = `http://localhost:${PORT}`;
 
 const browser = await chromium.launch({
@@ -202,6 +224,33 @@ try {
   } else {
     ok('Réouverture avec session ouverte : tableau de bord, pas la page vitrine');
   }
+
+  // 8 ter. Voix enregistrée des exercices d'écoute ---------------------------
+  // Le défaut le plus difficile à voir : un exercice de compréhension orale
+  // muet ne signale rien. On vérifie donc que le fichier existe, se décode et
+  // dure quelque chose — dans un vrai navigateur, sur la vraie build.
+  const clipCheck = await page.evaluate(async (id) => {
+    const url = `audio/${id}.ogg`;
+    const res = await fetch(url).catch(() => null);
+    if (!res || !res.ok) return { ok: false, why: `fichier introuvable (${res ? res.status : 'réseau'})` };
+    const a = document.createElement('audio');
+    a.preload = 'auto';
+    a.src = url;
+    const loaded = await new Promise((resolve) => {
+      a.oncanplaythrough = () => resolve(true);
+      a.onerror = () => resolve(false);
+      setTimeout(() => resolve(false), 8000);
+    });
+    if (!loaded) return { ok: false, why: 'le navigateur ne sait pas décoder l’extrait' };
+    // `audio.duration` vaut l'infini tant que le serveur ne gère pas les
+    // requêtes par plage : on décode réellement les octets pour connaître la
+    // durée, ce qui prouve du même coup que le fichier contient bien du son.
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const buf = await new Ctx().decodeAudioData(await (await fetch(url)).arrayBuffer());
+    return { ok: buf.duration > 0.3 && buf.duration < 30, why: `durée ${buf.duration.toFixed(2)} s` };
+  }, clipId(LISTENING_SAMPLE));
+  if (clipCheck.ok) ok(`Extrait d'écoute enregistré, chargé et décodé (${clipCheck.why})`);
+  else fail("Voix des exercices d'écoute", clipCheck.why);
 
   // 9. Parcours + unité -----------------------------------------------------
   await page.goto(`${base}/#/app/learn`, { waitUntil: 'networkidle' });

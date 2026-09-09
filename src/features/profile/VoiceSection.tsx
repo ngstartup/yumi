@@ -12,10 +12,12 @@ import { useEffect, useState } from 'react';
 import { useT } from '@/i18n';
 import { Button } from '@/ds';
 import { onVoiceChange, speak, speechAvailable, voiceDriverId } from '@/lib/tts';
+import { clipsAvailable, hasClip } from '@/lib/audioClips';
 import { isNative, nativeVoiceStatus, openVoiceInstall } from '@/native';
 
-/** Phrase de test : courte, mais assez longue pour juger de l'accent. */
-const SAMPLE = 'She works in London and takes the train every morning.';
+/** Phrase de test : elle fait partie du contenu, donc elle est enregistrée.
+ *  Le bouton éprouve ainsi le chemin réellement emprunté par les exercices. */
+const SAMPLE = 'My brother lives in London.';
 
 export function VoiceSection() {
   const t = useT();
@@ -27,15 +29,22 @@ export function VoiceSection() {
 
   const driver = voiceDriverId();
   const { status, lang } = nativeVoiceStatus();
-  const missingVoice = isNative() && status === 'noEnglish';
+  const recorded = clipsAvailable() && hasClip(SAMPLE);
 
-  const description = missingVoice
-    ? t('profile.feedback.voiceNone')
-    : driver === 'native'
-      ? status === 'ready'
-        ? t('profile.feedback.voiceNative', { lang })
-        : t('profile.feedback.voiceProbing')
-      : t('profile.feedback.voiceWeb');
+  // Le moteur du système n'est plus qu'un filet : il ne sert qu'aux textes non
+  // enregistrés. On ne signale son absence de voix anglaise que si l'on en
+  // dépend réellement.
+  const missingVoice = !recorded && isNative() && status === 'noEnglish';
+
+  const description = recorded
+    ? t('profile.feedback.voiceRecorded')
+    : missingVoice
+      ? t('profile.feedback.voiceNone')
+      : driver === 'native'
+        ? status === 'ready'
+          ? t('profile.feedback.voiceNative', { lang })
+          : t('profile.feedback.voiceProbing')
+        : t('profile.feedback.voiceWeb');
 
   return (
     <div className="border-t border-surface-sunk pt-3">

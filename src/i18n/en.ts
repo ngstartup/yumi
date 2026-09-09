@@ -170,6 +170,8 @@ export const en: DeepPartial<Dictionary> = {
       voiceProbing: 'Looking for the phone’s speech engine…',
       voiceNone:
         'No English voice is installed on this device: listening exercises stay silent until one is.',
+      voiceRecorded:
+        'Recorded voice, shipped with the app: listening exercises work offline, on every phone.',
       voiceTest: 'Play a sample',
       voiceInstall: 'Install an English voice',
       voiceInstallHint:

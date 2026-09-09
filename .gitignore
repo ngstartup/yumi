@@ -22,3 +22,7 @@ android/app/capacitor.build.gradle
 android/capacitor.settings.gradle
 android/.gradle/
 android/local.properties
+
+# Caches Python des scripts d’outillage.
+__pycache__/
+*.pyc
