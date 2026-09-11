@@ -151,8 +151,8 @@ différente à chaque appareil.
 
 `scripts/make-audio.py` fait l'inventaire de tout ce que le moteur peut donner à
 prononcer — les champs anglais du contenu et la banque de placement, 722 énoncés — puis
-les enregistre avec Kokoro (`kokoro-multi-lang-v1_0`, voix `bf_emma`, féminine
-britannique), rogne les silences, normalise le niveau et encode en Opus 24 kb/s : environ
+les enregistre avec Kokoro (`kokoro-multi-lang-v1_0`, voix `af_heart`, féminine
+américaine), rogne les silences, normalise le niveau et encode en Opus 24 kb/s : environ
 3 Mo pour l'ensemble.
 
 Deux choix qui ne sont pas techniques. Le modèle d'abord : les synthèses mono-voix de

@@ -48,12 +48,12 @@ INDEX_FILE = ROOT / "src" / "audio" / "clips.ts"
 # Opus tient cette finesse à 24 kb/s là où il en faudrait plus du double en
 # MP3 : les 722 extraits tiennent ainsi dans quelques mégaoctets, ce qui
 # compte pour une mise à jour à distance payée en données mobiles.
-# Voix et débit. `bf_emma` est une voix féminine britannique — la prononciation
-# de référence de la charte — et 0,85 la place un cran sous le débit naturel :
-# assez lent pour qu'un débutant sépare les mots, assez proche du naturel pour
-# ne pas déformer l'intonation. Le bouton « écouter lentement » des dictées
-# descend encore, à la lecture.
-DEFAULT_SPEAKER = 21
+# Voix et débit. `af_heart` est une voix féminine américaine, choisie à l'oreille
+# parmi les candidates. 0,85 la place un cran sous le débit naturel : assez lent
+# pour qu'un débutant sépare les mots, assez proche du naturel pour ne pas
+# déformer l'intonation. Le bouton « écouter lentement » des dictées descend
+# encore, à la lecture.
+DEFAULT_SPEAKER = 3
 DEFAULT_SPEED = 0.85
 
 BITRATE = "24k"
@@ -94,9 +94,10 @@ def _init(model_dir: str, sid: int, speed: float) -> None:
                     tokens=f"{model_dir}/tokens.txt",
                     data_dir=f"{model_dir}/espeak-ng-data",
                     dict_dir=f"{model_dir}/dict",
-                    # Lexique britannique : c'est la prononciation de référence
-                    # de la charte pédagogique.
-                    lexicon=f"{model_dir}/lexicon-gb-en.txt,{model_dir}/lexicon-zh.txt",
+                    # Lexique américain, accordé à la voix retenue : mêler un
+                    # lexique britannique à une voix américaine donne des mots
+                    # isolés qui détonnent dans la phrase.
+                    lexicon=f"{model_dir}/lexicon-us-en.txt,{model_dir}/lexicon-zh.txt",
                 ),
                 provider="cpu",
                 num_threads=1,
@@ -165,7 +166,7 @@ def main() -> int:
     ap.add_argument("--model-dir", required=True,
                     help="dossier du modèle kokoro-multi-lang-v1_0")
     ap.add_argument("--speaker", type=int, default=DEFAULT_SPEAKER,
-                    help=f"identifiant de voix Kokoro (défaut {DEFAULT_SPEAKER} = bf_emma)")
+                    help=f"identifiant de voix Kokoro (défaut {DEFAULT_SPEAKER} = af_heart)")
     ap.add_argument("--speed", type=float, default=DEFAULT_SPEED,
                     help="1.0 = débit naturel ; en dessous, plus lent")
     ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2)))

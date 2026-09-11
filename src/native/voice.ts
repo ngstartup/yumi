@@ -65,9 +65,10 @@ function setStatus(next: VoiceStatus, nextLang?: string): void {
 }
 
 /**
- * Choix de la variante d'anglais. L'anglais britannique est la référence de la
- * charte pédagogique ; à défaut, n'importe quelle autre variante fait l'affaire
- * — un apprenant A1 ne sera pas gêné par un accent américain, il le sera par le
+ * Choix de la variante d'anglais. On aligne le repli sur l'accent des
+ * enregistrements embarqués — américain — pour ne pas changer de référence de
+ * prononciation d'un énoncé à l'autre ; à défaut, n'importe quelle variante fait
+ * l'affaire : un apprenant A1 sera moins gêné par un autre accent que par le
  * silence.
  */
 function pickEnglish(languages: unknown): string | null {
@@ -75,8 +76,8 @@ function pickEnglish(languages: unknown): string | null {
   const tags = languages.filter((l): l is string => typeof l === 'string');
   if (tags.length === 0) return null;
   return (
-    tags.find((l) => /^en[-_]GB$/i.test(l)) ??
     tags.find((l) => /^en[-_]US$/i.test(l)) ??
+    tags.find((l) => /^en[-_]GB$/i.test(l)) ??
     tags.find((l) => /^en/i.test(l)) ??
     null
   );

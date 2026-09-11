@@ -67,7 +67,7 @@ export const nativeSpeechProvider: SpeechProvider = {
 
     try {
       const listen = SpeechRecognition.start({
-        language: 'en-GB',
+        language: 'en-US',
         maxResults: 1,
         partialResults: false,
         popup: false, // l'interface de Yumi remplace la boîte de dialogue Android

@@ -12,10 +12,10 @@
  * pédagogiquement : la prononciation de référence est toujours la même, quel
  * que soit l'appareil.
  *
- * Les fichiers sont produits par `scripts/make-audio.py` (voix Piper
- * en_GB-cori-high) et l'index par le même script. La synthèse vocale reste en
- * repli pour tout texte non enregistré — une phrase ajoutée au contenu avant
- * la prochaine génération, par exemple.
+ * Les fichiers et leur index sont produits par `scripts/make-audio.py` (Kokoro,
+ * voix `af_heart`, féminine américaine, débit ralenti pour un débutant). La
+ * synthèse vocale de l'appareil reste en repli pour tout texte non enregistré —
+ * une phrase ajoutée au contenu avant la prochaine génération, par exemple.
  */
 
 import { CLIP_IDS } from '@/audio/clips';

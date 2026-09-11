@@ -4,7 +4,7 @@
  *
  *    1. **Un enregistrement embarqué** (`src/lib/audioClips.ts`). C'est la voie
  *       normale : les 722 énoncés du contenu sont enregistrés une fois pour
- *       toutes — voix féminine britannique, débit ralenti pour un débutant — et
+ *       toutes — voix féminine américaine, débit ralenti pour un débutant — et
  *       livrés avec l'application. Ils se jouent partout, hors connexion, avec
  *       la même prononciation de référence sur tous les appareils.
  *    2. `nativeVoiceDriver` — le moteur vocal du système, installé par
@@ -39,9 +39,11 @@ function pickVoice(): SpeechSynthesisVoice | null {
   if (!synthesisPresent()) return (cachedVoice = null);
   const voices = window.speechSynthesis.getVoices();
   if (voices.length === 0) return null; // pas encore chargées — on réessaiera
+  // Même accent que les enregistrements : l'apprenant ne doit pas changer de
+  // référence de prononciation selon que le texte est enregistré ou non.
   const preferred =
-    voices.find((v) => /en-GB/i.test(v.lang) && /female|Google|Serena|Kate/i.test(v.name)) ??
-    voices.find((v) => /en-GB/i.test(v.lang)) ??
+    voices.find((v) => /en-US/i.test(v.lang) && /female|Google|Samantha|Ava/i.test(v.name)) ??
+    voices.find((v) => /en-US/i.test(v.lang)) ??
     voices.find((v) => /^en/i.test(v.lang)) ??
     null;
   cachedVoice = preferred;
@@ -63,7 +65,7 @@ export const webVoiceDriver: VoiceDriver = {
     const u = new SpeechSynthesisUtterance(text);
     const v = pickVoice();
     if (v) u.voice = v;
-    u.lang = v?.lang ?? 'en-GB';
+    u.lang = v?.lang ?? 'en-US';
     u.rate = options.rate ?? 0.95;
     u.pitch = 1;
     window.speechSynthesis.speak(u);
@@ -250,7 +252,7 @@ function webListenOnce(timeoutMs: number): Promise<string> {
 
   return new Promise((resolve, reject) => {
     const rec = new Ctor();
-    rec.lang = 'en-GB';
+    rec.lang = 'en-US';
     rec.interimResults = false;
     rec.maxAlternatives = 1;
     let settled = false;
