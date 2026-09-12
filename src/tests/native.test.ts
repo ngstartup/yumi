@@ -25,6 +25,7 @@ import {
 } from '@/lib/tts';
 import { isNative, platform } from '@/native/platform';
 import { installNativeVoice, nativeVoiceStatus } from '@/native/voice';
+import { markAppChrome } from '@/native';
 import { checkForUpdate, compareVersions, updatesSupported } from '@/native/updates';
 
 /** Pilote de test : enregistre les motifs reçus au lieu de faire vibrer. */
@@ -169,6 +170,17 @@ describe('détection de plateforme', () => {
     expect(() => platform()).not.toThrow();
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
+  });
+});
+
+describe('marqueur « application »', () => {
+  it('ne marque rien hors application installée', () => {
+    // La page vitrine ouverte dans un navigateur doit rester sélectionnable :
+    // on y copie une adresse ou une phrase, c'est le comportement attendu d'un
+    // site. Seule l'application installée coupe la sélection au doigt.
+    const undo = markAppChrome();
+    expect(typeof undo).toBe('function');
+    expect(() => undo()).not.toThrow();
   });
 });
 

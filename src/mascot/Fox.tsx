@@ -3,14 +3,20 @@ import { cn } from '@/lib/cn';
 import { EXPRESSIONS, type Expression } from './expressions';
 
 /**
- * Yumi — the fox mascot.
+ * Yumi — la mascotte renard.
  *
- * Entirely original geometry: a rounded shield head, wide-set angular ears and a
- * flat-colour amber/blue palette drawn from the Yumi brand. Nothing here is
- * derived from any other language app's character.
+ * Géométrie entièrement originale : un crâne rond, des oreilles courtes et
+ * écartées, et un large masque crème qui porte les yeux, le museau et la
+ * bouche. Rien n'est dérivé du personnage d'une autre application de langues.
  *
- * `stage` (1…6) mirrors the learner's CEFR progression and layers on accessories;
- * `expression` drives eyes, brows and mouth.
+ * La silhouette a été redessinée après la refonte visuelle ; les coordonnées
+ * du visage, elles, n'ont pas bougé d'un pixel. C'est volontaire : les onze
+ * expressions et les six évolutions sont dessinées sur cette grille
+ * (yeux en 44 et 76 à hauteur 60, museau en 83, bouche vers 95), et les
+ * redessiner aurait été refaire soixante-six dessins au lieu d'un.
+ *
+ * `stage` (1…6) suit la progression CECRL de l'apprenant et ajoute des
+ * accessoires ; `expression` pilote les yeux, les sourcils et la bouche.
  */
 export function Fox({
   expression = 'happy',
@@ -54,6 +60,14 @@ export function Fox({
           <stop offset="0%" stopColor="#FFFFFF" stopOpacity=".45" />
           <stop offset="60%" stopColor="#FFFFFF" stopOpacity="0" />
         </linearGradient>
+        <linearGradient id={`mask-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="100%" stopColor="#FFF3DE" />
+        </linearGradient>
+        <radialGradient id={`glow-${uid}`} cx="0.32" cy="0.24" r="0.62">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity=".55" />
+          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+        </radialGradient>
         <radialGradient id={`ground-${uid}`}>
           <stop offset="0%" stopColor="#0B1B34" stopOpacity=".28" />
           <stop offset="100%" stopColor="#0B1B34" stopOpacity="0" />
@@ -67,40 +81,48 @@ export function Fox({
 
       <g className={cn(animate && 'animate-floaty')}>
       <g transform={`rotate(${spec.tilt} 60 70)`}>
-        {/* Ears — hautes et étroites, marque de fabrique du renard Yumi */}
-        <path d="M19 50 L24 8 L54 34 Z" fill={`url(#coat-${uid})`} />
-        <path d="M26 41 L29 19 L42 34 Z" fill="#FFF1C6" />
-        <path d="M25 22 L29 19 L31 27 Z" fill="#0F2460" opacity=".85" />
-        <path d="M101 50 L96 8 L66 34 Z" fill={`url(#coat-${uid})`} />
-        <path d="M94 41 L91 19 L78 34 Z" fill="#FFF1C6" />
-        <path d="M95 22 L91 19 L89 27 Z" fill="#0F2460" opacity=".85" />
+        {/* Oreilles — courtes et écartées. Leur base mord sur le crâne : posées
+            au-dessus, elles flottent au lieu d'y être attachées. */}
+        <path d="M24 46 L14 17 L46 28 Z" fill={`url(#coat-${uid})`} />
+        <path d="M28 40 L21 23 L39 30 Z" fill="#FFD9AE" />
+        <path d="M96 46 L106 17 L74 28 Z" fill={`url(#coat-${uid})`} />
+        <path d="M92 40 L99 23 L81 30 Z" fill="#FFD9AE" />
 
-        {/* Head */}
+        {/* Crâne — un galet, pas un écusson. */}
         <path
-          d="M60 118 C41 118 23 99 19 71 C15 44 36 28 60 28 C84 28 105 44 101 71 C97 99 79 118 60 118 Z"
+          d="M60 24 C86 24 104 47 104 71 C104 98 86 118 60 118 C34 118 16 98 16 71 C16 47 34 24 60 24 Z"
           fill={`url(#coat-${uid})`}
         />
-        {/* Cheek tufts — the silhouette detail that makes Yumi recognisable */}
-        <path d="M19 70 C12 74 10 83 14 90 C17 84 19 79 20 75 Z" fill={coatBottom} />
-        <path d="M101 70 C108 74 110 83 106 90 C103 84 101 79 100 75 Z" fill={coatBottom} />
+        {/* La même lumière que le reste de l'interface : elle vient d'en haut,
+            légèrement en avant. Sans ce reflet, le crâne reste un aplat. */}
         <path
-          d="M60 28 C42 28 26 39 21 55 C31 39 44 32 60 32 Z"
-          fill={`url(#sheen-${uid})`}
+          d="M60 24 C86 24 104 47 104 71 C104 98 86 118 60 118 C34 118 16 98 16 71 C16 47 34 24 60 24 Z"
+          fill={`url(#glow-${uid})`}
         />
 
-        {/* Muzzle */}
+        {/* Masque — il porte les yeux, le museau et la bouche. Assez large pour
+            les contenir, assez étroit pour laisser voir le pelage tout autour :
+            c'est cette couronne orange qui fait lire un renard. */}
         <path
-          d="M60 112 C45 112 36 101 36 89 C36 78 47 73 60 73 C73 73 84 78 84 89 C84 101 75 112 60 112 Z"
-          fill="#FFFFFF"
+          d="M60 45 C79 45 89 60 89 78 C89 98 76 112 60 112 C44 112 31 98 31 78 C31 60 41 45 60 45 Z"
+          fill={`url(#mask-${uid})`}
         />
-        {/* Forehead blaze */}
-        <path d="M60 32 C53 43 51 54 51 63 C55 61 65 61 69 63 C69 54 67 43 60 32 Z" fill="#FFF7DC" opacity=".7" />
+        {/* Ombre portée du crâne sur le masque : quelques pixels suffisent à
+            faire passer l'un devant l'autre. */}
+        <path
+          d="M60 45 C79 45 89 60 89 78 C89 81 88.8 84 88.4 87 C88 68 76 52 60 52 C44 52 32 68 31.6 87 C31.2 84 31 81 31 78 C31 60 41 45 60 45 Z"
+          fill="#B97F1E"
+          opacity=".18"
+        />
 
         <Eyes shape={spec.eyes} />
         <Brows shape={spec.brow} />
 
-        {/* Nose */}
-        <path d="M60 78 C64.5 78 67 80.5 67 83 C67 86 63.5 88.5 60 88.5 C56.5 88.5 53 86 53 83 C53 80.5 55.5 78 60 78 Z" fill="#0B1B34" />
+        {/* Museau — un triangle adouci, pointe vers la bouche. */}
+        <path
+          d="M53.6 77.6 H66.4 C67.8 77.6 68.6 79.2 67.7 80.3 L61.3 88.4 C60.6 89.2 59.4 89.2 58.7 88.4 L52.3 80.3 C51.4 79.2 52.2 77.6 53.6 77.6 Z"
+          fill="#0B1B34"
+        />
         <Mouth shape={spec.mouth} />
 
         {spec.blush && (
@@ -299,8 +321,8 @@ function Accessories({ stage }: { stage: number }) {
       {/* 2 — scarf */}
       {stage >= 2 && (
         <g>
-          <path d="M28 107 C40 119 80 119 92 107 C88 123 32 123 28 107 Z" fill="#2F62F0" />
-          <path d="M86 113 l10 14 -9 3 -6 -13 z" fill="#1C48D1" />
+          <path d="M34 100 C44 113 76 113 86 100 C83 117 37 117 34 100 Z" fill="#2F62F0" />
+          <path d="M80 108 l10 14 -9 3 -6 -13 z" fill="#1C48D1" />
         </g>
       )}
       {/* 3 — glasses */}
@@ -322,8 +344,8 @@ function Accessories({ stage }: { stage: number }) {
       {/* 5 — laurel arcs */}
       {stage >= 5 && (
         <g stroke="#10B981" strokeWidth="3" fill="none" strokeLinecap="round" opacity=".9">
-          <path d="M14 76 C10 90 16 102 26 108" />
-          <path d="M106 76 C110 90 104 102 94 108" />
+          <path d="M9 72 C3 92 10 106 25 114" />
+          <path d="M111 72 C117 92 110 106 95 114" />
         </g>
       )}
       {/* 6 — crest */}

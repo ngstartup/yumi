@@ -17,7 +17,7 @@ import { nativeHapticDriver } from './haptics';
 import { nativeSpeechProvider, probeNativeSpeech } from './speech';
 import { installNativeVoice, nativeVoiceDriver } from './voice';
 import { checkForUpdate, markAppReady, updatesSupported } from './updates';
-import { isNative, pluginAvailable, platform } from './platform';
+import { isNative, isStandalonePwa, pluginAvailable, platform } from './platform';
 
 export { isNative, platform, isStandalonePwa } from './platform';
 export { nativeVoiceStatus, openVoiceInstall, type VoiceStatus } from './voice';
@@ -30,6 +30,24 @@ export {
 } from './updates';
 
 type Cleanup = () => void;
+
+/**
+ * Marque le document quand l'interface est une application — empaquetée sur
+ * Android, ou installée depuis le navigateur — et non une page web ouverte
+ * dans un onglet.
+ *
+ * C'est ce marqueur que la feuille de style attend pour couper la sélection de
+ * texte : un appui long sur un énoncé ne doit pas faire surgir la loupe et le
+ * menu « Copier / Tout sélectionner » par-dessus l'exercice. Sur le web, en
+ * revanche, la page vitrine reste sélectionnable — on y copie une adresse ou
+ * une phrase, c'est normal.
+ */
+export function markAppChrome(): () => void {
+  if (typeof document === 'undefined') return () => undefined;
+  if (!isNative() && !isStandalonePwa()) return () => undefined;
+  document.documentElement.setAttribute('data-app', '');
+  return () => document.documentElement.removeAttribute('data-app');
+}
 
 /** Masque l'écran de lancement — appelé quand l'application est réellement
  *  prête, pas quand la WebView a fini de charger. */

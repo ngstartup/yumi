@@ -76,7 +76,7 @@ src/
   auth/         Authentification (locale aujourd'hui, OAuth/Supabase demain)
   state/        Store applicatif (zustand) et sélecteurs dérivés
   ds/           Design system Yumi — composants réutilisables
-  mascot/       Le renard Yumi : 6 évolutions × 11 expressions, 100 % SVG
+  mascot/       Le renard Yumi : crâne rond, masque crème, 6 évolutions × 11 expressions, 100 % SVG
   i18n/         Traductions et contexte de langue
   features/     Écrans, un dossier par domaine
   audio/        Index des extraits enregistrés — GÉNÉRÉ, ne pas éditer

@@ -182,6 +182,38 @@
     position: relative;
     z-index: 1;
   }
+
+  /* ── Appui long ───────────────────────────────────────────────────────
+     Dans une application installée, un appui long sur un énoncé ne doit rien
+     déclencher : la loupe d'Android et le menu « Copier / Tout sélectionner »
+     surgissent par-dessus l'exercice, et il faut un appui dans le vide pour
+     s'en débarrasser. Les champs de saisie gardent évidemment la sélection —
+     sans elle, on ne peut plus corriger une faute de frappe ni coller un mot
+     de passe.
+
+     Le marqueur `data-app` est posé par `markAppChrome()` uniquement quand
+     Yumi tourne en application : sur la page vitrine ouverte dans un
+     navigateur, le texte reste sélectionnable, comme sur n'importe quel site. */
+  html[data-app],
+  html[data-app] body {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  html[data-app] input,
+  html[data-app] textarea,
+  html[data-app] [contenteditable='true'] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Un appui long sur une image ou un lien propose de l'enregistrer ou de le
+     partager : même intrusion, même remède. */
+  html[data-app] img,
+  html[data-app] a {
+    -webkit-user-drag: none;
+  }
 }
 
 @layer components {

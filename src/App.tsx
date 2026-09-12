@@ -7,7 +7,7 @@ import { AppShell } from '@/components/AppShell';
 import { useApp } from '@/state/store';
 import { Fox } from '@/mascot';
 import { bindAudioUnlock } from '@/lib/feedback';
-import { confirmAppStarted, hideSplash, initNative } from '@/native';
+import { confirmAppStarted, hideSplash, initNative, markAppChrome } from '@/native';
 import { LandingPage } from '@/features/landing/LandingPage';
 import { SignInPage, SignUpPage, ResetPage } from '@/features/auth/AuthPages';
 import { OnboardingPage } from '@/features/onboarding/OnboardingPage';
@@ -103,6 +103,9 @@ export default function App() {
     // Plateforme : pilote haptique natif, reconnaissance vocale du système,
     // bouton retour Android, barre d'état. Inerte dans un navigateur.
     const stopNative = initNative();
+    // Installée, Yumi est une application : un appui long n'y sélectionne pas
+    // du texte. Ouverte dans un onglet, elle reste une page web ordinaire.
+    const unmarkChrome = markAppChrome();
     // Les navigateurs n'autorisent le son qu'après un geste : on prépare le
     // contexte audio au premier appui, sans rien émettre.
     const unbindAudio = bindAudioUnlock();
@@ -119,6 +122,7 @@ export default function App() {
 
     return () => {
       stopNative();
+      unmarkChrome();
       unbindAudio();
     };
   }, [bootstrap]);
