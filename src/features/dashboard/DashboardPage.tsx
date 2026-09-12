@@ -1,6 +1,16 @@
 import { Link } from 'react-router-dom';
 import { useI18n, useT } from '@/i18n';
-import { Button, ButtonLink, Card, Chip, ProgressBar, RingProgress, SectionTitle, StatTile } from '@/ds';
+import {
+  Button,
+  ButtonLink,
+  Card,
+  Chip,
+  ProgressBar,
+  RingProgress,
+  SectionTitle,
+  StatGroup,
+  StatTile,
+} from '@/ds';
 import { IconBolt, IconChevronRight, IconClock, IconRefresh, IconTarget } from '@/ds/icons';
 import { Fox } from '@/mascot';
 import { LEVEL_TO_STAGE, STAGE_NAMES } from '@/mascot/expressions';
@@ -78,7 +88,7 @@ export function DashboardPage() {
 
       {/* Continuer */}
       {upcoming ? (
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-700 text-white ring-blue-700">
+        <Card className="yumi-brand-card text-white ring-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-blue-100">
             {isFirstLesson ? t('dashboard.startFirst') : t('dashboard.nextLesson')}
           </p>
@@ -150,7 +160,7 @@ export function DashboardPage() {
       {/* Statistiques rapides */}
       <section>
         <SectionTitle>{t('dashboard.quickStats')}</SectionTitle>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatGroup>
           <StatTile label={t('stats.weekXp')} value={totalWeekXp(history)} icon={<IconBolt width={14} height={14} />} tone="sun" />
           <StatTile label={t('stats.lessonsDone')} value={totals.lessonsCompleted} icon={<IconTarget width={14} height={14} />} />
           <StatTile label={t('stats.wordsLearned')} value={totals.wordsLearned} />
@@ -160,7 +170,7 @@ export function DashboardPage() {
             icon={<IconClock width={14} height={14} />}
             tone="neutral"
           />
-        </div>
+        </StatGroup>
 
         <Card className="mt-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">{t('stats.last7')}</p>
@@ -168,7 +178,11 @@ export function DashboardPage() {
             {week.map((d) => (
               <div key={d.day} className="flex flex-1 flex-col items-center gap-1.5">
                 <div
-                  className={d.xp > 0 ? 'w-full rounded-t-md bg-blue-500' : 'w-full rounded-t-md bg-surface-sunk'}
+                  className={
+                    d.xp > 0
+                      ? 'w-full rounded-t-md bg-gradient-to-b from-blue-400 to-blue-600 shadow-[inset_0_1px_0_rgba(255,255,255,.4),0_2px_5px_-2px_rgba(28,72,209,.7)]'
+                      : 'w-full rounded-t-md bg-surface-sunk shadow-groove'
+                  }
                   style={{ height: `${Math.max(4, (d.xp / maxWeek) * 100)}%` }}
                   title={`${d.day} — ${d.xp} XP`}
                 />

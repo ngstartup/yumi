@@ -40,7 +40,7 @@ export function Fox({
       viewBox="0 0 120 130"
       width={size}
       height={(size * 130) / 120}
-      className={cn(animate && 'animate-floaty', className)}
+      className={className}
       role={title ? 'img' : 'presentation'}
       aria-label={title}
       aria-hidden={title ? undefined : true}
@@ -54,8 +54,18 @@ export function Fox({
           <stop offset="0%" stopColor="#FFFFFF" stopOpacity=".45" />
           <stop offset="60%" stopColor="#FFFFFF" stopOpacity="0" />
         </linearGradient>
+        <radialGradient id={`ground-${uid}`}>
+          <stop offset="0%" stopColor="#0B1B34" stopOpacity=".28" />
+          <stop offset="100%" stopColor="#0B1B34" stopOpacity="0" />
+        </radialGradient>
       </defs>
 
+      {/* L'ombre au sol. Sans elle, Yumi flotte au-dessus de l'écran sans lui
+          appartenir ; elle reste immobile pendant que le renard respire, ce qui
+          est précisément ce qui donne l'impression qu'il est posé. */}
+      <ellipse cx="60" cy="125" rx="31" ry="4.6" fill={`url(#ground-${uid})`} />
+
+      <g className={cn(animate && 'animate-floaty')}>
       <g transform={`rotate(${spec.tilt} 60 70)`}>
         {/* Ears — hautes et étroites, marque de fabrique du renard Yumi */}
         <path d="M19 50 L24 8 L54 34 Z" fill={`url(#coat-${uid})`} />
@@ -113,6 +123,7 @@ export function Fox({
           <path d="M100 100 l1.5 3 3 1.5 -3 1.5 -1.5 3 -1.5 -3 -3 -1.5 3 -1.5 z" opacity=".7" />
         </g>
       )}
+      </g>
     </svg>
   );
 }

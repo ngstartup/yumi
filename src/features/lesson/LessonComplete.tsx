@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useI18n, useT } from '@/i18n';
-import { Button, ButtonLink, Card, Chip } from '@/ds';
+import { Button, ButtonLink, Card, Chip, StatGroup } from '@/ds';
 import { Fox } from '@/mascot';
 import { badgeById } from '@/engine/badges';
 import type { SessionSummary } from '@/state/store';
@@ -49,9 +49,15 @@ export function LessonComplete({
         <h1 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-ink">
           🎉 {t('lesson.completeTitle')}
         </h1>
-        <p className="mt-2 font-display text-4xl font-extrabold tabular-nums text-sun-600 animate-pop">
-          +{summary.xpTotal} XP
-        </p>
+        {/* La récompense est le seul endroit où le relief est poussé à fond :
+            elle doit avoir l'air d'un objet qu'on a gagné. Partout ailleurs il
+            reste discret, sinon il cesse de signifier quoi que ce soit. */}
+        <div className="yumi-medal mt-4 flex h-28 w-28 animate-pop flex-col items-center justify-center rounded-full text-sun-800">
+          <span className="font-display text-3xl font-extrabold tabular-nums leading-none">
+            +{summary.xpTotal}
+          </span>
+          <span className="mt-0.5 text-xs font-bold uppercase tracking-widest">XP</span>
+        </div>
         {summary.perfect && (
           <Chip tone="mint" className="mt-3">
             {t('lesson.perfectRun')}
@@ -59,12 +65,12 @@ export function LessonComplete({
         )}
       </div>
 
-      <div className="mt-8 grid grid-cols-2 gap-3">
+      <StatGroup className="mt-8">
         <Metric label={t('lesson.accuracy')} value={`${summary.accuracy} %`} />
         <Metric label={t('lesson.newWords')} value={String(summary.newWords)} />
         <Metric label={t('lesson.timeSpent')} value={formatDuration(summary.durationMs)} />
         <Metric label="🔥 Série" value={`${summary.streak} j`} />
-      </div>
+      </StatGroup>
 
       {summary.grammarTopics.length > 0 && (
         <Card className="mt-3">
@@ -113,7 +119,7 @@ export function LessonComplete({
       )}
 
       {summary.goalJustReached && (
-        <div className="mt-3 rounded-xl2 bg-mint-500 p-4 text-center text-sm font-semibold text-white">
+        <div className="yumi-key yumi-key-mint mt-3 rounded-xl2 p-4 text-center text-sm font-semibold text-white">
           {t('dashboard.goalReached')}
         </div>
       )}
@@ -132,7 +138,7 @@ export function LessonComplete({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl2 bg-white p-4 text-center shadow-card ring-1 ring-surface-sunk">
+    <div className="bg-white p-4 text-center">
       <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">{label}</p>
       <p className="mt-1 font-display text-2xl font-extrabold tabular-nums text-ink">{value}</p>
     </div>

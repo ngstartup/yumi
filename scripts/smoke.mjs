@@ -189,7 +189,9 @@ try {
 
   // 6. Fin de leçon ---------------------------------------------------------
   await page.getByText(/Leçon terminée/).first().waitFor({ timeout: 20000 });
-  const xpText = await page.getByText(/^\+\d+ XP$/).first().textContent();
+  // L'XP gagnée est présentée en médaille : le montant et l'unité sont deux
+  // éléments, on lit donc le disque entier.
+  const xpText = await page.locator('.yumi-medal').first().innerText();
   await page.screenshot({ path: 'screenshots/07-complete.png', fullPage: true });
   ok(`Écran de fin de leçon avec gain d'XP (${xpText?.trim()})`);
 

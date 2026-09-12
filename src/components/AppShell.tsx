@@ -86,7 +86,7 @@ export function AppShell() {
       <nav
         aria-label="Navigation principale"
         data-bottom-nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-surface-sunk bg-white pb-[var(--safe-bottom)] sm:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-surface-sunk bg-white pb-[var(--safe-bottom)] shadow-[0_-8px_20px_-14px_rgba(11,27,52,.45)] sm:hidden"
       >
         <div className="flex">
           {TABS.map(({ to, end, key, Icon }) => (
@@ -97,8 +97,12 @@ export function AppShell() {
               onClick={() => feedback('navigate')}
               className={({ isActive }) =>
                 cn(
-                  'flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-semibold transition-colors',
-                  isActive ? 'text-blue-600' : 'text-ink-muted'
+                  'relative flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-semibold transition-colors',
+                  // L'onglet actif porte un liseré lumineux sur l'arête haute :
+                  // la position se lit sans avoir à comparer les couleurs.
+                  isActive
+                    ? 'text-blue-600 before:absolute before:inset-x-5 before:top-0 before:h-[3px] before:rounded-b-full before:bg-gradient-to-b before:from-blue-400 before:to-blue-600'
+                    : 'text-ink-muted'
                 )
               }
             >

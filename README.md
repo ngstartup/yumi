@@ -105,6 +105,42 @@ La sélection d'une session combine trois contraintes : la fenêtre de difficult
 CECRL de l'apprenant (un débutant ne reçoit jamais de C1), la priorité aux notions
 fragiles, et l'alternance des compétences.
 
+### Relief et matière
+
+Le design system ne déclare pas des ombres au cas par cas : il déclare une
+**lumière**. Une seule, en haut et légèrement en avant. Toutes les ombres en
+découlent — elles descendent, s'élargissent avec la hauteur, et sont teintées
+d'encre Yumi plutôt que de noir, parce que du noir sur un fond bleuté donne une
+ombre sale. Trois hauteurs seulement (`shadow-e1`, `e2`, `e3`), deux couches par
+hauteur, jamais plus.
+
+Quatre conséquences, toutes dans `src/styles.css` :
+
+- **Les touches ont une épaisseur** (`.yumi-key`). Face en dégradé, tranche
+  pleine dessous, ombre de contact, reflet sur l'arête ; à l'appui, la touche
+  s'enfonce de toute son épaisseur. Chaque variante de `Button` ne règle que des
+  variables de couleur. C'est le geste qui fait le relief, pas l'image — et les
+  propositions de réponse (`.yumi-opt`) en héritent : la réponse se sent avant
+  de se lire.
+- **Ce qui se remplit est creusé** (`shadow-groove`) : pistes de progression,
+  champs, unités verrouillées. Le remplissage, lui, est bombé et légèrement
+  lumineux. Une unité verrouillée n'est donc pas seulement grise, elle est
+  enfoncée — l'état se lit à la forme, ce qui aide aussi en plein soleil.
+- **Les fonds ont du grain.** Un aplat parfait se lit comme un écran
+  d'ordinateur. Une lueur douce venue du haut et un voile de bruit à 3 % le
+  changent en surface. Le grain est une couche fixe, peinte une fois, posée sous
+  le contenu — sur les cartes il salirait le blanc.
+- **La récompense est un objet.** La médaille de fin de leçon (`.yumi-medal`)
+  est le seul endroit où l'effet est poussé à fond ; partout ailleurs le relief
+  reste discret, sinon il cesse de signifier quoi que ce soit.
+
+Rien de tout cela ne se paie au défilement : aucun `backdrop-filter` — on l'a
+justement retiré parce qu'il faisait ramer l'application —, aucune ombre animée
+(seules les transformations bougent), aucune image ajoutée, aucune bibliothèque.
+
+La direction a été validée sur maquette avant d'être portée : un même balisage,
+deux peaux, un commutateur entre les deux.
+
 ### Retour sensoriel — son et vibrations
 
 `src/lib/feedback.ts` est le point d'entrée unique. L'interface déclare une

@@ -27,7 +27,7 @@ export function ChoiceExercise({ exercise, answer, onAnswer, locked }: ExerciseP
             feedback('tap');
             if (exercise.audio) speak(exercise.audio);
           }}
-          className="mt-4 flex w-full items-center justify-center gap-3 rounded-xl2 bg-blue-500 px-5 py-6 font-display text-lg font-bold text-white shadow-press transition hover:bg-blue-600"
+          className="yumi-key yumi-key-blue mt-4 flex w-full items-center justify-center gap-3 rounded-xl2 px-5 py-6 font-display text-lg font-bold text-white"
         >
           <IconSpeaker width={26} height={26} /> {t('lesson.tapToListen')}
         </button>

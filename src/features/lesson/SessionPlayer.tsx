@@ -415,8 +415,11 @@ function FeedbackBar({
   return (
     <div
       className={cn(
+        // Elle arrive par-dessus l'écran : son ombre monte, elle ne descend pas.
         'fixed inset-x-0 bottom-0 z-30 animate-riseIn border-t-2 pb-[var(--safe-bottom)]',
-        result.correct ? 'border-mint-500 bg-emerald-50' : 'border-coral-400 bg-rose-50'
+        result.correct
+          ? 'yumi-feedback-correct border-mint-500'
+          : 'yumi-feedback-wrong border-coral-400'
       )}
     >
       <div
@@ -427,7 +430,7 @@ function FeedbackBar({
         className="mx-auto max-w-2xl px-4 py-4 outline-none"
       >
         <div className="flex items-start gap-3">
-          <Fox size={54} expression={expression} />
+          <Fox size={54} expression={expression} className="shrink-0" />
           <div className="min-w-0 flex-1">
             <p
               className={cn(

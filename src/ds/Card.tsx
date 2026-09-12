@@ -96,6 +96,30 @@ export function StatTile({
   );
 }
 
+/**
+ * Une série de chiffres, pas une série de cartes.
+ *
+ * Quatre tuiles élevées comme le reste de l'écran aplatissent la hiérarchie :
+ * tout pèse pareil, et l'action du jour ne ressort plus. Regroupées dans un
+ * seul bloc à filets, elles se lisent comme une série — et la carte qui porte
+ * l'action reprend sa place au premier plan.
+ */
+export function StatGroup({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <div
+      className={cn(
+        'grid grid-cols-2 overflow-hidden rounded-xl2 bg-white shadow-e1 ring-1 ring-surface-sunk',
+        '[&>*]:rounded-none [&>*]:bg-transparent [&>*]:shadow-none [&>*]:ring-0',
+        '[&>*]:border-b [&>*]:border-r [&>*]:border-surface-sunk',
+        '[&>*:nth-child(2n)]:border-r-0 [&>*:nth-last-child(-n+2)]:border-b-0',
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function EmptyState({
   title,
   text,

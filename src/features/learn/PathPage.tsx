@@ -43,8 +43,8 @@ export function PathPage() {
             className={cn(
               'flex shrink-0 items-center gap-2 rounded-xl2 border-2 px-4 py-2.5 text-sm font-semibold transition-all',
               key === trackId
-                ? 'border-blue-500 bg-blue-50 text-blue-800'
-                : 'border-surface-sunk bg-white text-ink-muted hover:border-blue-200'
+                ? 'border-blue-500 bg-blue-50 text-blue-800 shadow-groove'
+                : 'border-surface-sunk bg-white text-ink-muted shadow-e1 hover:border-blue-200'
             )}
           >
             <span aria-hidden>{TRACK_META[key].icon}</span>
@@ -85,12 +85,16 @@ export function PathPage() {
                   <div className="flex items-center gap-4">
                     <span
                       className={cn(
+                        // Des pierres : posées et éclairées quand l'unité est
+                        // ouverte, enfoncées quand elle ne l'est pas. L'état se
+                        // lit à la forme autant qu'à la couleur — ce qui aide
+                        // quand on regarde l'écran en plein soleil.
                         'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl2 text-xl',
                         u.status === 'completed'
-                          ? 'bg-mint-500 text-white'
+                          ? 'yumi-stone-done text-white'
                           : locked
-                            ? 'bg-surface-sunk text-ink-muted'
-                            : 'bg-blue-50'
+                            ? 'yumi-stone-locked text-ink-muted'
+                            : 'yumi-stone text-white'
                       )}
                       aria-hidden
                     >

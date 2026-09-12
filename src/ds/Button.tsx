@@ -6,17 +6,19 @@ import { feedback, type FeedbackEvent } from '@/lib/feedback';
 type Variant = 'primary' | 'secondary' | 'ghost' | 'sun' | 'success' | 'danger';
 type Size = 'sm' | 'md' | 'lg';
 
+/**
+ * Chaque variante n'est qu'un jeu de couleurs : la mécanique du relief — face
+ * en dégradé, tranche pleine, ombre de contact, enfoncement à l'appui — vit
+ * dans `.yumi-key` (src/styles.css). Le fantôme est la seule variante à rester
+ * plate : un bouton secondaire discret n'a pas à réclamer de l'épaisseur.
+ */
 const VARIANTS: Record<Variant, string> = {
-  primary:
-    'bg-blue-500 text-white shadow-press hover:bg-blue-600 active:translate-y-[2px] active:shadow-none disabled:bg-blue-200',
-  secondary:
-    'bg-white text-ink border-2 border-surface-sunk shadow-press hover:border-blue-200 hover:text-blue-600 active:translate-y-[2px] active:shadow-none',
+  primary: 'yumi-key yumi-key-blue text-white',
+  secondary: 'yumi-key yumi-key-white text-ink hover:text-blue-600',
   ghost: 'bg-transparent text-ink-soft hover:bg-surface-sunk',
-  sun: 'bg-sun-400 text-ink shadow-press hover:bg-sun-300 active:translate-y-[2px] active:shadow-none',
-  success:
-    'bg-mint-500 text-white shadow-press hover:bg-mint-600 active:translate-y-[2px] active:shadow-none',
-  danger:
-    'bg-coral-500 text-white shadow-press hover:bg-coral-600 active:translate-y-[2px] active:shadow-none',
+  sun: 'yumi-key yumi-key-sun text-sun-800',
+  success: 'yumi-key yumi-key-mint text-white',
+  danger: 'yumi-key yumi-key-coral text-white',
 };
 
 const SIZES: Record<Size, string> = {
@@ -26,7 +28,7 @@ const SIZES: Record<Size, string> = {
 };
 
 const BASE =
-  'inline-flex select-none items-center justify-center gap-2 font-semibold tracking-tight transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:translate-y-0';
+  'inline-flex select-none items-center justify-center gap-2 font-semibold tracking-tight disabled:cursor-not-allowed disabled:opacity-60';
 
 /** Retour sensoriel par défaut, déduit du rôle du bouton. `null` le désactive
  *  (utile quand l'écran joue déjà un son plus expressif juste après). */
@@ -147,7 +149,7 @@ export function IconButton({
         onClick?.(e);
       }}
       className={cn(
-        'inline-flex h-11 w-11 items-center justify-center rounded-xl text-ink-soft transition-colors hover:bg-surface-sunk hover:text-ink',
+        'inline-flex h-11 w-11 items-center justify-center rounded-xl text-ink-soft transition-colors hover:bg-surface-sunk hover:text-ink active:bg-surface-sunk',
         className
       )}
       {...rest}

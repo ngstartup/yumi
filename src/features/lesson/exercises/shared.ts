@@ -11,8 +11,12 @@ export interface ExerciseProps<E extends Exercise = Exercise> {
   result: GradeResult | null;
 }
 
+/** Une proposition est une touche : elle a une tranche, elle s'enfonce sous le
+ *  doigt. La réponse se sent avant de se lire — ce qui compte quand on
+ *  enchaîne onze questions. Une fois la réponse validée, la touche est à plat :
+ *  il n'y a plus rien à appuyer. */
 export const OPTION_BASE =
-  'w-full rounded-xl2 border-2 px-4 py-3.5 text-left text-[15px] transition-all duration-150 disabled:cursor-default';
+  'yumi-opt w-full rounded-xl2 border-2 bg-white px-4 py-3.5 text-left text-[15px] disabled:cursor-default disabled:shadow-none';
 
 export function optionTone(params: {
   selected: boolean;
@@ -22,7 +26,7 @@ export function optionTone(params: {
   const { selected, locked, isCorrectOption } = params;
   if (!locked) {
     return selected
-      ? 'border-blue-500 bg-blue-50 font-semibold text-blue-900'
+      ? 'yumi-opt-selected border-blue-300 font-semibold text-blue-900'
       : 'border-surface-sunk text-ink-soft hover:border-blue-200 hover:text-ink';
   }
   if (isCorrectOption) return 'border-mint-500 bg-emerald-50 font-semibold text-emerald-900';

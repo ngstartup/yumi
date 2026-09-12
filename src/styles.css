@@ -150,3 +150,224 @@
     @apply rounded-full bg-blue-100;
   }
 }
+
+@layer base {
+  /* ── Matière ──────────────────────────────────────────────────────────
+     Un aplat parfait se lit comme un écran d'ordinateur. Deux couches y
+     remédient : une lueur douce venue du haut, et un voile de bruit à 3 %.
+     Le grain est une surface fixe, peinte une fois, invisible au doigt et
+     posée SOUS le contenu — sur les cartes il salirait le blanc. */
+  :root {
+    --yumi-grain: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAiIGhlaWdodD0iMTYwIj48ZmlsdGVyIGlkPSJuIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC44NSIgbnVtT2N0YXZlcz0iMyIgc3RpdGNoVGlsZXM9InN0aXRjaCIvPjxmZUNvbG9yTWF0cml4IHR5cGU9InNhdHVyYXRlIiB2YWx1ZXM9IjAiLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTYwIiBoZWlnaHQ9IjE2MCIgZmlsdGVyPSJ1cmwoI24pIiBvcGFjaXR5PSIwLjU1Ii8+PC9zdmc+");
+  }
+
+  body {
+    background-image: radial-gradient(120% 60% at 50% -8%, #FFFFFF 0%, rgba(255, 255, 255, 0) 58%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: var(--yumi-grain);
+    opacity: 0.38;
+    mix-blend-mode: multiply;
+  }
+
+  #root {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@layer components {
+  /* ── Touches ──────────────────────────────────────────────────────────
+     Une face en dégradé, une tranche pleine dessous qui donne l'épaisseur,
+     une ombre de contact, un reflet sur l'arête. À l'appui, la touche
+     s'enfonce de toute son épaisseur : c'est le geste qui fait le relief,
+     pas l'image. Les variantes ne règlent que des variables. */
+  .yumi-key {
+    background-image: linear-gradient(180deg, var(--key-top), var(--key-mid) 55%, var(--key-bot));
+    box-shadow:
+      0 4px 0 var(--key-edge),
+      0 8px 14px -6px var(--key-halo),
+      inset 0 1px 0 var(--key-gloss);
+    transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.15s ease;
+  }
+  .yumi-key:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow:
+      0 0 0 var(--key-edge),
+      0 2px 5px -3px var(--key-halo),
+      inset 0 1px 0 var(--key-gloss);
+  }
+  .yumi-key:disabled {
+    box-shadow: 0 2px 0 var(--key-edge);
+    filter: saturate(0.5);
+  }
+
+  .yumi-key-blue {
+    --key-top: #5A87FA;
+    --key-mid: #2F62F0;
+    --key-bot: #1C48D1;
+    --key-edge: #1638A6;
+    --key-halo: rgba(11, 27, 52, 0.45);
+    --key-gloss: rgba(255, 255, 255, 0.34);
+    text-shadow: 0 1px 0 rgba(11, 27, 52, 0.25);
+  }
+  .yumi-key-sun {
+    --key-top: #FFD04D;
+    --key-mid: #FFBE1F;
+    --key-bot: #F0A60C;
+    --key-edge: #D07F02;
+    --key-halo: rgba(135, 72, 12, 0.42);
+    --key-gloss: rgba(255, 255, 255, 0.55);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+  .yumi-key-mint {
+    --key-top: #34D399;
+    --key-mid: #10B981;
+    --key-bot: #0BA372;
+    --key-edge: #047857;
+    --key-halo: rgba(4, 120, 87, 0.42);
+    --key-gloss: rgba(255, 255, 255, 0.3);
+    text-shadow: 0 1px 0 rgba(4, 78, 57, 0.25);
+  }
+  .yumi-key-coral {
+    --key-top: #FB7185;
+    --key-mid: #F43F5E;
+    --key-bot: #E11D48;
+    --key-edge: #A3123A;
+    --key-halo: rgba(136, 15, 47, 0.42);
+    --key-gloss: rgba(255, 255, 255, 0.3);
+    text-shadow: 0 1px 0 rgba(136, 15, 47, 0.25);
+  }
+  .yumi-key-white {
+    --key-top: #FFFFFF;
+    --key-mid: #FFFFFF;
+    --key-bot: #F7F9FD;
+    --key-edge: #D8E0EF;
+    --key-halo: rgba(11, 27, 52, 0.26);
+    --key-gloss: rgba(255, 255, 255, 0.9);
+  }
+
+  /* ── Carte de marque ──────────────────────────────────────────────────
+     La seule carte qui monte au dernier niveau d'élévation : celle qui porte
+     l'action du jour. Dégradé en diagonale, tache de lumière en haut à
+     gauche, fond qui s'assombrit en bas — elle devient un objet posé sur
+     l'écran plutôt qu'un rectangle coloré. */
+  .yumi-brand-card {
+    background-image:
+      radial-gradient(90% 70% at 8% 0%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 55%),
+      linear-gradient(148deg, #3E72FF 0%, #2F62F0 42%, #1638A6 100%);
+    box-shadow:
+      0 2px 4px rgba(11, 27, 52, 0.06),
+      0 22px 44px -20px rgba(11, 27, 52, 0.34),
+      inset 0 1px 0 rgba(255, 255, 255, 0.34),
+      inset 0 -18px 28px -22px rgba(6, 18, 48, 0.9);
+  }
+
+  /* ── Propositions de réponse ──────────────────────────────────────────
+     Des touches, elles aussi : la réponse se sent avant de se lire, ce qui
+     compte quand on enchaîne onze questions. */
+  .yumi-opt {
+    box-shadow:
+      0 3px 0 rgba(11, 27, 52, 0.1),
+      0 5px 10px -6px rgba(11, 27, 52, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.15s ease,
+      border-color 0.15s ease;
+  }
+  .yumi-opt:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow:
+      0 0 0 rgba(11, 27, 52, 0.1),
+      0 1px 3px -2px rgba(11, 27, 52, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  .yumi-opt-selected {
+    background-image: linear-gradient(180deg, #F5F9FF, #EEF4FF);
+    box-shadow:
+      0 3px 0 #B7CEFF,
+      0 6px 12px -6px rgba(47, 98, 240, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  /* ── Jalons du parcours ───────────────────────────────────────────────
+     Des pierres : une tranche sous le disque, une ombre portée au sol. Une
+     unité verrouillée n'est pas seulement grise, elle est enfoncée —
+     l'état se lit à la forme, ce qui aide aussi en plein soleil. */
+  .yumi-stone {
+    background-image: radial-gradient(85% 70% at 30% 18%, #6C95FF 0%, #2F62F0 55%, #1C48D1 100%);
+    box-shadow:
+      0 5px 0 #1638A6,
+      0 12px 18px -9px rgba(11, 27, 52, 0.55),
+      inset 0 2px 0 rgba(255, 255, 255, 0.4);
+  }
+  .yumi-stone-done {
+    background-image: radial-gradient(85% 70% at 30% 18%, #6EE7B7 0%, #10B981 55%, #0A9D6E 100%);
+    box-shadow:
+      0 5px 0 #047857,
+      0 12px 18px -9px rgba(4, 120, 87, 0.5),
+      inset 0 2px 0 rgba(255, 255, 255, 0.45);
+  }
+  .yumi-stone-locked {
+    background-image: linear-gradient(180deg, #E3E9F5, #EDF1F9);
+    box-shadow:
+      inset 0 1px 2px rgba(11, 27, 52, 0.12),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.7),
+      0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  /* ── Récompense ───────────────────────────────────────────────────────
+     Le seul endroit où le relief est poussé à fond : une récompense doit
+     avoir l'air d'un objet qu'on a gagné. Partout ailleurs il reste
+     discret, sinon il cesse de signifier quoi que ce soit. */
+  .yumi-medal {
+    background-image: radial-gradient(
+      75% 65% at 32% 24%,
+      #FFE9A8 0%,
+      #FFD04D 38%,
+      #FFBE1F 68%,
+      #E79A06 100%
+    );
+    box-shadow:
+      inset 0 0 0 5px rgba(255, 255, 255, 0.28),
+      inset 0 -8px 14px -8px rgba(135, 72, 12, 0.75),
+      inset 0 5px 10px -4px rgba(255, 255, 255, 0.85),
+      0 10px 20px -8px rgba(135, 72, 12, 0.55);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+
+  /* ── Mascotte ─────────────────────────────────────────────────────────
+     Sans ombre de contact, le renard flotte au-dessus de l'écran sans lui
+     appartenir. Avec, il est posé dans la scène. */
+  .yumi-fox-ground {
+    position: relative;
+  }
+  .yumi-fox-ground::after {
+    content: '';
+    position: absolute;
+    left: 14%;
+    right: 14%;
+    bottom: -5px;
+    height: 9px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(11, 27, 52, 0.3), rgba(11, 27, 52, 0));
+  }
+
+  /* ── Barre de correction ──────────────────────────────────────────────
+     Elle arrive par-dessus l'écran ; son ombre monte, elle ne descend pas. */
+  .yumi-feedback-correct {
+    background-image: linear-gradient(180deg, #F2FDF8, #ECFDF5);
+    box-shadow: 0 -10px 24px -14px rgba(4, 120, 87, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  .yumi-feedback-wrong {
+    background-image: linear-gradient(180deg, #FFF6F7, #FFF1F3);
+    box-shadow: 0 -10px 24px -14px rgba(190, 18, 60, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+}
