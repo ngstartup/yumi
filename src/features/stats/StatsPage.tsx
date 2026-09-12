@@ -8,6 +8,7 @@ import { BADGES } from '@/engine/badges';
 import { useApp } from '@/state/store';
 import { formatDuration, skillMastery, successRate, totalWeekXp, weeklyXp } from '@/state/selectors';
 import { SKILL_KEYS } from '@/content';
+import { YumiCard } from './YumiCard';
 import { cn } from '@/lib/cn';
 
 export function StatsPage() {
@@ -49,6 +50,8 @@ export function StatsPage() {
           }
         />
       )}
+
+      <YumiCard level={profile.level} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label={t('stats.totalXp')} value={totals.xp} icon={<IconBolt width={14} height={14} />} tone="sun" />
