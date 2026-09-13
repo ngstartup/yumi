@@ -35,7 +35,23 @@ interface Props {
  */
 type Phase = 'intro' | 'playing' | 'correctionIntro' | 'correction' | 'complete';
 
-export function SessionPlayer({
+/**
+ * Une session par leçon, toujours neuve.
+ *
+ * « Continuer » à la fin d'une leçon mène à `/lesson/<suivante>` : c'est la
+ * même route, donc React garde le composant monté et tout son état avec lui —
+ * l'écran restait figé sur le résultat de la leçon précédente pendant que
+ * l'adresse, elle, avait bien changé. L'apprenant appuyait, rien ne bougeait,
+ * il appuyait encore, et sautait des leçons sans le savoir.
+ *
+ * La clé sur `lessonId` fait repartir la session de zéro. Elle est posée ici,
+ * et pas chez l'appelant, pour qu'aucun écran ne puisse l'oublier.
+ */
+export function SessionPlayer(props: Props) {
+  return <Session key={props.lessonId} {...props} />;
+}
+
+function Session({
   exercises,
   lessonId,
   title,

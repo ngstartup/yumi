@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { grade } from '@/engine/grading';
 import { generateExercises } from '@/engine/generator';
-import { getLesson, lessonsOfTrack } from '@/content';
+import { allLessons, getLesson, lessonsOfTrack } from '@/content';
 import { lessonAfter } from '@/state/selectors';
 import { difficultyWindow, selectExercises } from '@/engine/selection';
 import { isDue, masteryOf, newMemory, review } from '@/engine/srs';
@@ -271,5 +271,34 @@ describe('enchaînement des leçons', () => {
     expect(lessonAfter('general', 'lecon-inexistante')).toBeNull();
     // Une leçon d'un autre parcours n'appartient pas à celui-ci.
     expect(lessonAfter('general', lessonsOfTrack('business')[0].id)).toBeNull();
+  });
+});
+
+describe('libellés montrés à l’apprenant', () => {
+  // Garde-fou né d'un vrai défaut : l'écran de fin de leçon affichait
+  // « age-with-be · gen-a1-u1-l3-s2 », c'est-à-dire des identifiants internes.
+  // Un identifiant n'a jamais rien à faire à l'écran : tout ce qui s'affiche
+  // passe désormais par `concept`, et seulement par lui.
+  const looksTechnical = (s: string) => /^[a-z0-9]+(-[a-z0-9]+)+$/.test(s.trim());
+
+  it('aucune notion affichable ne ressemble à un identifiant', () => {
+    for (const l of allLessons()) {
+      for (const ex of generateExercises(l)) {
+        if (ex.concept === undefined) continue;
+        expect(ex.concept.trim().length).toBeGreaterThan(0);
+        expect(looksTechnical(ex.concept), `${l.id} → ${ex.id} : « ${ex.concept} »`).toBe(false);
+      }
+    }
+  });
+
+  it('chaque point de grammaire porte son titre, pas son topicId', () => {
+    // Sans ça la carte « Grammaire » se vide, ce qui est une régression muette.
+    const named = allLessons()
+      .flatMap((l) => generateExercises(l))
+      .filter((ex) => ex.skill === 'grammar' && ex.concept !== undefined);
+    expect(named.length).toBeGreaterThan(0);
+    // Un titre est un libellé humain — « be going to », « Comparer » — jamais
+    // l'identifiant de la notion.
+    expect(named.every((ex) => ex.concept !== ex.conceptId)).toBe(true);
   });
 });

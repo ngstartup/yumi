@@ -103,11 +103,8 @@ export function DashboardPage() {
         </Card>
       ) : (
         <Card>
-          <p className="font-display font-bold text-ink">Parcours terminé 🎉</p>
-          <p className="mt-1 text-sm text-ink-muted">
-            Vous avez terminé toutes les leçons disponibles de ce parcours. Changez de parcours ou révisez vos
-            notions.
-          </p>
+          <p className="font-display font-bold text-ink">{t('dashboard.trackDoneTitle')}</p>
+          <p className="mt-1 text-sm text-ink-muted">{t('dashboard.trackDoneBody')}</p>
           <ButtonLink to="/app/learn" variant="secondary" className="mt-4">
             {t('learn.changeTrack')}
           </ButtonLink>

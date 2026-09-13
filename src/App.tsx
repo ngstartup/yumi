@@ -96,6 +96,23 @@ function ConnectivityWatcher() {
   return null;
 }
 
+/**
+ * Remonter en haut à chaque changement d'écran.
+ *
+ * Sans ça, on arrive sur la leçon suivante à la hauteur où on avait laissé la
+ * précédente — c'est-à-dire tout en bas, sur un écran vide. Le navigateur ne
+ * le fait pas seul : ici, l'adresse change mais la page, elle, ne recharge
+ * jamais. `scroll-behavior: smooth` ferait glisser lentement le nouvel écran :
+ * on demande donc explicitement un saut net.
+ */
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+  }, [pathname]);
+  return null;
+}
+
 export default function App() {
   const bootstrap = useApp((s) => s.bootstrap);
 
@@ -135,6 +152,7 @@ export default function App() {
               fichier statique fonctionnent sans configuration serveur. */}
           <HashRouter>
             <ConnectivityWatcher />
+            <ScrollToTop />
             <Suspense fallback={<Splash />}>
               <Routes>
                 <Route path="/" element={<RootRoute />} />

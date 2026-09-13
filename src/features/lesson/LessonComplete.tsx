@@ -31,15 +31,12 @@ export function LessonComplete({
     return () => timers.forEach(window.clearTimeout);
   }, [summary]);
 
-  const reasonLabel: Record<string, string> = {
-    correct_answer: 'Bonnes réponses',
-    near_miss: 'Réponses presque justes',
-    lesson_complete: 'Leçon terminée',
-    perfect_lesson: t('lesson.perfectRun'),
-    combo: t('lesson.comboBonus', { n: 5 }),
-    assessment: 'Évaluation réussie',
-    daily_goal: t('dashboard.dailyGoal'),
-    review_session: 'Session de révision',
+  /** Les motifs d'XP viennent du moteur sous forme de clés : elles se
+   *  traduisent, elles ne s'affichent pas. Une clé inconnue retombe sur
+   *  elle-même plutôt que de laisser un trou. */
+  const reasonLabel = (reason: string) => {
+    const label = t(`lesson.xpReasons.${reason}`);
+    return label === `lesson.xpReasons.${reason}` ? reason : label;
   };
 
   return (
@@ -69,7 +66,7 @@ export function LessonComplete({
         <Metric label={t('lesson.accuracy')} value={`${summary.accuracy} %`} />
         <Metric label={t('lesson.newWords')} value={String(summary.newWords)} />
         <Metric label={t('lesson.timeSpent')} value={formatDuration(summary.durationMs)} />
-        <Metric label="🔥 Série" value={`${summary.streak} j`} />
+        <Metric label={`🔥 ${t('lesson.streakMetric')}`} value={`${summary.streak} j`} />
       </StatGroup>
 
       {summary.grammarTopics.length > 0 && (
@@ -82,11 +79,11 @@ export function LessonComplete({
       )}
 
       <Card className="mt-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Détail de l’XP</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">{t('lesson.xpDetail')}</p>
         <ul className="mt-2 space-y-1.5">
           {summary.xpEvents.map((e, i) => (
             <li key={`${e.reason}-${i}`} className="flex justify-between text-sm">
-              <span className="text-ink-soft">{reasonLabel[e.reason] ?? e.reason}</span>
+              <span className="text-ink-soft">{reasonLabel(e.reason)}</span>
               <span className="font-semibold tabular-nums text-ink">+{e.amount}</span>
             </li>
           ))}
@@ -96,8 +93,7 @@ export function LessonComplete({
       {summary.newBadges.length > 0 && (
         <Card className="mt-3 border-2 border-sun-200 bg-sun-50 ring-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-sun-800">
-            Nouveau{summary.newBadges.length > 1 ? 'x' : ''} badge
-            {summary.newBadges.length > 1 ? 's' : ''}
+            {summary.newBadges.length > 1 ? t('lesson.newBadges') : t('lesson.newBadge')}
           </p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {summary.newBadges.map((id) => {

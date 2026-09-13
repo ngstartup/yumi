@@ -96,6 +96,9 @@ export const en: DeepPartial<Dictionary> = {
     trackSwitch: 'Switch',
     trackSwitchAria: 'Switch to the {name} track',
     versionLine: 'Yumi {v}',
+    trackDoneTitle: 'Track complete 🎉',
+    trackDoneBody:
+      'You have finished every lesson available on this track. Switch tracks, or go back over what you have learned.',
   },
 
   lesson: {
@@ -118,6 +121,20 @@ export const en: DeepPartial<Dictionary> = {
     correctionIntroMany: '{n} exercises slipped through. Let’s redo them before moving on — this is where the learning happens.',
     correctionStart: 'Fix my mistakes',
     correctionSkip: 'Skip and see my result',
+    xpDetail: 'XP breakdown',
+    streakMetric: 'Streak',
+    newBadge: 'New badge',
+    newBadges: 'New badges',
+    xpReasons: {
+      correct_answer: 'Correct answers',
+      near_miss: 'Nearly right',
+      lesson_complete: 'Lesson complete',
+      perfect_lesson: 'Flawless',
+      combo: 'Answer streak',
+      assessment: 'Assessment passed',
+      daily_goal: 'Daily goal',
+      review_session: 'Review session',
+    },
     correctionNote: 'This round changes neither your score nor your XP.',
   },
 

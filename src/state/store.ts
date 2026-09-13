@@ -625,10 +625,21 @@ function countNewWords(outcomes: SessionOutcome[], before: Record<string, Memory
   return [...ids].filter((id) => !before[id] || before[id].correct === 0).length;
 }
 
+/**
+ * Les notions de grammaire rencontrées, sous leur nom.
+ *
+ * On lit `concept`, le libellé, et jamais `conceptId` : celui-ci est un
+ * identifiant technique (`age-with-be`, `gen-a1-u1-l3-s2`) qui n'a rien à faire
+ * sous les yeux d'un apprenant. Un exercice de grammaire dérivé d'une phrase
+ * modèle n'a pas de point de grammaire nommé — il est simplement absent de la
+ * liste, ce qui vaut mieux que d'y figurer sous un matricule.
+ */
 function uniqueGrammarTopics(outcomes: SessionOutcome[]): string[] {
-  return [
-    ...new Set(outcomes.filter((o) => o.exercise.skill === 'grammar').map((o) => o.exercise.conceptId)),
-  ];
+  const named = outcomes
+    .filter((o) => o.exercise.skill === 'grammar')
+    .map((o) => o.exercise.concept)
+    .filter((label): label is string => Boolean(label && label.trim()));
+  return [...new Set(named)];
 }
 
 function countCompletedUnits(progress: Record<string, LessonProgressRecord>): number {

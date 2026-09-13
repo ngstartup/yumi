@@ -165,6 +165,9 @@ export const fr = {
     trackSwitch: 'Activer',
     trackSwitchAria: 'Activer le parcours {name}',
     versionLine: 'Yumi {v}',
+    trackDoneTitle: 'Parcours terminé 🎉',
+    trackDoneBody:
+      'Vous avez terminé toutes les leçons disponibles de ce parcours. Changez de parcours ou révisez vos notions.',
   },
 
   learn: {
@@ -239,6 +242,20 @@ export const fr = {
     correctionStart: 'Corriger mes erreurs',
     correctionSkip: 'Passer et voir mon résultat',
     correctionNote: 'Cette reprise ne change ni votre score ni votre XP.',
+    xpDetail: "Détail de l'XP",
+    streakMetric: 'Série',
+    newBadge: 'Nouveau badge',
+    newBadges: 'Nouveaux badges',
+    xpReasons: {
+      correct_answer: 'Bonnes réponses',
+      near_miss: 'Réponses presque justes',
+      lesson_complete: 'Leçon terminée',
+      perfect_lesson: 'Sans faute',
+      combo: 'Série de bonnes réponses',
+      assessment: 'Évaluation réussie',
+      daily_goal: 'Objectif du jour',
+      review_session: 'Session de révision',
+    },
     perfectRun: 'Sans faute !',
     comboBonus: 'Série de {n} bonnes réponses',
   },

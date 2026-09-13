@@ -195,6 +195,19 @@ try {
   await page.screenshot({ path: 'screenshots/07-complete.png', fullPage: true });
   ok(`Écran de fin de leçon avec gain d'XP (${xpText?.trim()})`);
 
+  // 6b. Enchaînement vers la leçon suivante ---------------------------------
+  // « Continuer » mène à /lesson/<suivante> : même route, donc React garde le
+  // lecteur monté. Sans remise à zéro, l'adresse changeait mais l'écran restait
+  // figé sur le résultat précédent — l'apprenant appuyait dans le vide.
+  const lessonBefore = page.url();
+  await page.getByRole('button', { name: /^Continuer$/ }).first().click();
+  await page.getByRole('button', { name: /^Commencer$/ }).waitFor({ timeout: 10000 });
+  if (page.url() === lessonBefore) throw new Error('« Continuer » n’a pas changé de leçon');
+  if (await page.getByText(/Leçon terminée/).first().isVisible().catch(() => false)) {
+    throw new Error('« Continuer » laisse l’écran figé sur le résultat précédent');
+  }
+  ok('« Continuer » ouvre bien la leçon suivante, sur son introduction');
+
   // 7. Statistiques ---------------------------------------------------------
   await page.goto(`${base}/#/app/progress`, { waitUntil: 'networkidle' });
   await page.getByRole('heading', { name: 'Progression' }).waitFor({ timeout: 10000 });

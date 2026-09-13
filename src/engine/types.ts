@@ -20,6 +20,10 @@ export interface ExerciseBase {
   itemId: string;
   /** Notion travaillée (topicId de grammaire, ou l'item de vocabulaire). */
   conceptId: string;
+  /** Libellé lisible de la notion, quand elle en a un — le titre du point de
+   *  grammaire. `conceptId` est un identifiant technique : il n'a jamais rien à
+   *  faire à l'écran. */
+  concept?: string;
   skill: SkillKey;
   difficulty: Difficulty;
   instruction: string;
